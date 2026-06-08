@@ -45,6 +45,10 @@
     content: ''; position: absolute; top:-40px; right:-30px;
     width:120px; height:120px; background:rgba(255,255,255,.06); border-radius:50%;
   }
+  .hero::after {
+    content: ''; position: absolute; bottom:-30px; left:-20px;
+    width:80px; height:80px; background:rgba(255,255,255,.04); border-radius:50%;
+  }
   .hero h1 { font-size:28px; font-weight:700; letter-spacing:2px; position:relative; }
   .hero .date { font-size:15px; margin-top:6px; opacity:.9; position:relative; }
   .hero .countdown {
@@ -128,8 +132,12 @@
   }
 
   /* Hotel cards */
-  .hotel-card { margin-bottom:10px; }
+  .hotel-card {
+    background:#FAFAFA; border-radius:8px; padding:12px; margin-bottom:10px;
+  }
   .hotel-name { font-size:15px; font-weight:600; }
+  .hotel-addr { font-size:12px; color:var(--sub); margin:4px 0; }
+  .hotel-price { font-size:14px; color:var(--red); font-weight:600; margin-top:4px; }
   .hotel-pros { margin-top:4px; }
   .hotel-cons { margin-top:2px; color:#E67E22; font-size:13px; }
 
@@ -146,6 +154,12 @@
   .footer {
     text-align:center; padding:24px 0 0;
     font-size:12px; color:var(--sub);
+  }
+
+  /* Hotel section header */
+  .hotel-section-header {
+    font-size:18px; font-weight:700; margin:28px 0 12px;
+    display:flex; align-items:center; gap:8px;
   }
 
   /* Responsive imgs (if any) */
@@ -165,6 +179,9 @@
     text-align:center; color:var(--sub); font-size:13px;
     margin:20px 0 8px; letter-spacing:4px;
   }
+
+  /* Section icon style */
+  .section-icon { font-size:20px; }
 </style>
 </head>
 <body>
@@ -177,25 +194,25 @@
 
 <div class="wrap">
 
-  <!-- ======= Day 1 ======= -->
+  <!-- ==================== Day 1 ==================== -->
   <div class="day-hd day1">
     <div class="day-tag">D1</div>
     <div>
       <div class="day-label">6.13 周六</div>
-      <div class="day-sub">深圳出发，自驾约 1.5 小时</div>
+      <div class="day-sub">深圳出发，自驾约 1.5h</div>
     </div>
   </div>
 
   <div class="tl-item">
     <div class="tl-time">上午</div>
-    <div class="card-desc">睡到自然醒，从深圳自驾出发前往顺德</div>
+    <div class="card-desc">睡到自然醒，深圳自驾出发前往顺德</div>
   </div>
 
   <!-- 午餐投票 -->
   <div class="vote-section">
     <div class="vote-title">午餐 · 二选一投票</div>
     <div id="vote-lunch">
-      <div class="vote-option" data-option="shengji" onclick="handleVote('shengji')">
+      <div class="vote-option" data-option="shengji" onclick="handleVote('lunch', 'shengji')">
         <div class="vote-info">
           <div class="vote-name">顺德区生记饭店</div>
           <div class="vote-detail">
@@ -206,11 +223,11 @@
           </div>
         </div>
         <div class="vote-right">
-          <div class="vote-badge" id="count-shengji">0</div>
-          <div class="vote-btn" id="btn-shengji">投票</div>
+          <div class="vote-badge" id="count-lunch-shengji">0</div>
+          <div class="vote-btn" id="btn-lunch-shengji">投票</div>
         </div>
       </div>
-      <div class="vote-option" data-option="shaoezai" onclick="handleVote('shaoezai')">
+      <div class="vote-option" data-option="shaoezai" onclick="handleVote('lunch', 'shaoezai')">
         <div class="vote-info">
           <div class="vote-name">烧鹅再饭店</div>
           <div class="vote-detail">
@@ -220,55 +237,50 @@
           </div>
         </div>
         <div class="vote-right">
-          <div class="vote-badge" id="count-shaoezai">0</div>
-          <div class="vote-btn" id="btn-shaoezai">投票</div>
+          <div class="vote-badge" id="count-lunch-shaoezai">0</div>
+          <div class="vote-btn" id="btn-lunch-shaoezai">投票</div>
         </div>
       </div>
     </div>
     <div class="vote-note">点击即可投票，可随时修改。票数实时同步。</div>
   </div>
 
-  <!-- 酒店 -->
-  <div class="card">
-    <div class="card-title">酒店推荐</div>
-    <div class="hotel-card">
-      <div class="hotel-name">喜悦门酒店</div>
-      <div class="hotel-pros">
-        <span class="tag tag-pro">性价比高</span>
-        <span class="tag tag-pro">附近吃的多</span>
-        <span class="tag tag-pro">离我家仅 500m</span>
+  <!-- 晚餐投票 -->
+  <div class="vote-section">
+    <div class="vote-title">晚餐 · 二选一投票</div>
+    <div id="vote-dinner">
+      <div class="vote-option" data-option="xingfu" onclick="handleVote('dinner', 'xingfu')">
+        <div class="vote-info">
+          <div class="vote-name">相聚幸福大排档</div>
+          <div class="vote-detail">
+            <span class="tag tag-pro">卜卜贝一绝</span>
+            <span class="tag tag-pro">烤物一绝</span>
+            <span class="tag tag-con">环境比较吵</span>
+          </div>
+        </div>
+        <div class="vote-right">
+          <div class="vote-badge" id="count-dinner-xingfu">0</div>
+          <div class="vote-btn" id="btn-dinner-xingfu">投票</div>
+        </div>
       </div>
-      <div class="hotel-cons">我没住过，无法担保体验</div>
-    </div>
-    <div class="hotel-card">
-      <div class="hotel-name">歌顿酒店</div>
-      <div class="hotel-pros">
-        <span class="tag tag-pro">老牌五星级</span>
+      <div class="vote-option" data-option="zijixiang" onclick="handleVote('dinner', 'zijixiang')">
+        <div class="vote-info">
+          <div class="vote-name">你们自己想吃啥我陪着去</div>
+          <div class="vote-detail">
+            <span class="tag tag-pro">大家商量</span>
+            <span class="tag tag-pro">随心所欲</span>
+          </div>
+        </div>
+        <div class="vote-right">
+          <div class="vote-badge" id="count-dinner-zijixiang">0</div>
+          <div class="vote-btn" id="btn-dinner-zijixiang">投票</div>
+        </div>
       </div>
-      <div class="hotel-cons">老牌五星级，设施可能偏旧</div>
     </div>
-    <div class="hotel-card">
-      <div class="hotel-name">喜来登酒店</div>
-      <div class="hotel-pros">
-        <span class="tag tag-pro">环境好</span>
-        <span class="tag tag-pro">条件好</span>
-      </div>
-      <div class="hotel-cons">周末价格偏贵</div>
-    </div>
+    <div class="vote-note">点击即可投票，可随时修改。</div>
   </div>
 
-  <!-- 晚餐 -->
-  <div class="card">
-    <div class="card-title">晚餐</div>
-    <div class="hotel-name">相聚幸福大排档</div>
-    <div style="margin-top:6px;">
-      <span class="tag tag-pro">卜卜贝一绝</span>
-      <span class="tag tag-pro">烤物一绝</span>
-      <span class="tag tag-con">环境比较吵</span>
-    </div>
-  </div>
-
-  <!-- 晚间 -->
+  <!-- 晚间活动 -->
   <div class="card">
     <div class="card-title">晚间活动</div>
     <div class="tl-item">
@@ -285,7 +297,7 @@
     <div class="card-desc" style="margin-top:4px;">双皮奶 + 姜撞奶</div>
   </div>
 
-  <!-- ======= Day 2 ======= -->
+  <!-- ==================== Day 2 ==================== -->
   <div class="divider">- - -</div>
 
   <div class="day-hd day2">
@@ -306,25 +318,40 @@
     </div>
   </div>
 
-  <!-- 周日上午 -->
-  <div class="card">
-    <div class="card-title">上午目的地 · 二选一</div>
-    <div class="hotel-card">
-      <div class="hotel-name">和美术馆</div>
-      <div class="hotel-pros">
-        <span class="tag tag-pro">安藤忠雄设计</span>
-        <span class="tag tag-pro">很高级很出片</span>
+  <!-- 周日上午投票 -->
+  <div class="vote-section">
+    <div class="vote-title">上午活动 · 二选一投票</div>
+    <div id="vote-morning">
+      <div class="vote-option" data-option="museum" onclick="handleVote('morning', 'museum')">
+        <div class="vote-info">
+          <div class="vote-name">和美术馆</div>
+          <div class="vote-detail">
+            <span class="tag tag-pro">安藤忠雄设计</span>
+            <span class="tag tag-pro">很高级很出片</span>
+            <span class="tag tag-con">门票小贵（咸鱼可买便宜票）</span>
+          </div>
+        </div>
+        <div class="vote-right">
+          <div class="vote-badge" id="count-morning-museum">0</div>
+          <div class="vote-btn" id="btn-morning-museum">投票</div>
+        </div>
       </div>
-      <div class="hotel-cons">门票小贵，但可以在闲鱼买便宜票</div>
-    </div>
-    <div class="hotel-card">
-      <div class="hotel-name">欢乐港湾</div>
-      <div class="hotel-pros">
-        <span class="tag tag-pro">热门地标</span>
-        <span class="tag tag-pro">大家都爱去</span>
+      <div class="vote-option" data-option="harbour" onclick="handleVote('morning', 'harbour')">
+        <div class="vote-info">
+          <div class="vote-name">欢乐港湾</div>
+          <div class="vote-detail">
+            <span class="tag tag-pro">热门地标</span>
+            <span class="tag tag-pro">大家都爱去</span>
+            <span class="tag tag-con">深圳也有，不必特意跑顺德看</span>
+          </div>
+        </div>
+        <div class="vote-right">
+          <div class="vote-badge" id="count-morning-harbour">0</div>
+          <div class="vote-btn" id="btn-morning-harbour">投票</div>
+        </div>
       </div>
-      <div class="hotel-cons">深圳也有，不必特意跑顺德看</div>
     </div>
+    <div class="vote-note">点击即可投票，可随时修改。</div>
   </div>
 
   <!-- 午餐 -->
@@ -337,6 +364,47 @@
   <div class="card">
     <div class="card-title">下午</div>
     <div class="card-desc">看大家状态，决定是否返深。不赶时间，随意就好。</div>
+  </div>
+
+  <!-- ==================== 酒店推荐（放在最后） ==================== -->
+  <div class="divider">- - -</div>
+
+  <div class="card">
+    <div class="card-title">酒店推荐</div>
+
+    <div class="hotel-card">
+      <div class="hotel-name">喜悦门酒店</div>
+      <div class="hotel-addr">容桂街道容桂大道中73号（近天佑城商圈）</div>
+      <div class="hotel-price">约 ¥200 - ¥380 / 晚</div>
+      <div class="hotel-pros">
+        <span class="tag tag-pro">性价比高</span>
+        <span class="tag tag-pro">附近吃的多</span>
+        <span class="tag tag-pro">离我家仅 500m</span>
+      </div>
+      <div class="hotel-cons">我住过，无法担保体验</div>
+    </div>
+
+    <div class="hotel-card">
+      <div class="hotel-name">歌顿酒店</div>
+      <div class="hotel-addr">顺德区大良街道（具体地址请地图搜索确认）</div>
+      <div class="hotel-price">约 ¥400 - ¥700 / 晚</div>
+      <div class="hotel-pros">
+        <span class="tag tag-pro">老牌五星级</span>
+      </div>
+      <div class="hotel-cons">老牌五星级，设施可能偏旧</div>
+    </div>
+
+    <div class="hotel-card">
+      <div class="hotel-name">喜来登酒店</div>
+      <div class="hotel-addr">大良街道德胜中路11号（临德胜河）</div>
+      <div class="hotel-price">约 ¥600 - ¥1000 / 晚（周末价）</div>
+      <div class="hotel-pros">
+        <span class="tag tag-pro">环境好</span>
+        <span class="tag tag-pro">条件好</span>
+        <span class="tag tag-pro">五星级万豪系</span>
+      </div>
+      <div class="hotel-cons">周末价格偏贵</div>
+    </div>
   </div>
 
   <div class="footer">
@@ -354,24 +422,13 @@
 
 <script>
 // =====================================================
-// 如果要启用跨设备实时投票，请按以下步骤操作：
-// 1. 前往 https://console.firebase.google.com/ 创建项目
-// 2. 在 Build > Realtime Database 中创建数据库（测试模式）
-// 3. 在 Project Settings 中添加 Web 应用，复制配置
-// 4. 将下面的 FIREBASE_CONFIG 替换为你的配置
+// 跨设备实时投票：配置 Firebase 即可
+// 1. https://console.firebase.google.com/ 创建项目
+// 2. Build > Realtime Database 创建数据库（测试模式）
+// 3. Project Settings > Add Web App，复制配置填入下方
 // =====================================================
 
 const FIREBASE_CONFIG = null;
-// 示例（取消注释并填入你的配置）：
-// const FIREBASE_CONFIG = {
-//   apiKey: "AIza...",
-//   authDomain: "xxx.firebaseapp.com",
-//   databaseURL: "https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app",
-//   projectId: "xxx",
-//   storageBucket: "xxx.appspot.com",
-//   messagingSenderId: "xxx",
-//   appId: "1:xxx:web:xxx"
-// };
 
 // ---- User ID ----
 function getUserId() {
@@ -394,21 +451,33 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
 }
 
-// ---- Voting System ----
-let votingImpl = null; // { vote, on, off }
-let myVote = null;     // current option id or null
+// ---- Voting System (multi-topic) ----
+// Topics: lunch, dinner, morning
+// Each has its own storage key and current vote for this user
+const TOPICS = ['lunch', 'dinner', 'morning'];
+const TOPIC_OPTIONS = {
+  lunch: ['shengji', 'shaoezai'],
+  dinner: ['xingfu', 'zijixiang'],
+  morning: ['museum', 'harbour']
+};
+const TOPIC_LABELS = {
+  lunch: { shengji: '生记饭店', shaoezai: '烧鹅再饭店' },
+  dinner: { xingfu: '相聚幸福大排档', zijixiang: '你们想吃啥我陪着去' },
+  morning: { museum: '和美术馆', harbour: '欢乐港湾' }
+};
 
-function getCountsFromSnapshot(snap) {
+let votingImpl = null; // { vote(topic, optionId), getMyVote(topic) }
+let myVotes = {}; // { lunch: 'shengji', dinner: null, morning: null }
+
+function getCountsFromSnapshot(snap, topic) {
   const counts = {};
+  const opts = TOPIC_OPTIONS[topic];
+  opts.forEach(o => counts[o] = 0);
   if (snap.exists()) {
     const data = snap.val();
     for (const [optionId, voters] of Object.entries(data)) {
       counts[optionId] = voters ? Object.keys(voters).length : 0;
     }
-  }
-  // Ensure all options have a count
-  for (const opt of ['shengji', 'shaoezai']) {
-    if (!(opt in counts)) counts[opt] = 0;
   }
   return counts;
 }
@@ -416,118 +485,109 @@ function getCountsFromSnapshot(snap) {
 // Firebase implementation
 function initFirebaseVoting() {
   if (!FIREBASE_CONFIG) return false;
-  try {
-    firebase.initializeApp(FIREBASE_CONFIG);
-  } catch (e) {
-    // Already initialized
-  }
+  try { firebase.initializeApp(FIREBASE_CONFIG); } catch (e) {}
   const db = firebase.database();
-  const votesRef = db.ref('votes/lunch');
 
-  votesRef.on('value', snap => {
-    const counts = getCountsFromSnapshot(snap);
-    updateCounts(counts);
+  TOPICS.forEach(topic => {
+    db.ref('votes/' + topic).on('value', snap => {
+      const counts = getCountsFromSnapshot(snap, topic);
+      updateCounts(topic, counts);
+    });
   });
 
   return {
-    async vote(optionId) {
-      // Remove old vote if switching
-      if (myVote && myVote !== optionId) {
-        await db.ref('votes/lunch/' + myVote + '/' + uid).remove();
+    async vote(topic, optionId) {
+      const prev = myVotes[topic];
+      if (prev && prev !== optionId) {
+        await db.ref('votes/' + topic + '/' + prev + '/' + uid).remove();
       }
-      if (myVote === optionId) {
-        // Toggle off
-        await db.ref('votes/lunch/' + optionId + '/' + uid).remove();
-        myVote = null;
+      if (prev === optionId) {
+        await db.ref('votes/' + topic + '/' + optionId + '/' + uid).remove();
+        myVotes[topic] = null;
       } else {
-        await db.ref('votes/lunch/' + optionId + '/' + uid).set(true);
-        myVote = optionId;
+        await db.ref('votes/' + topic + '/' + optionId + '/' + uid).set(true);
+        myVotes[topic] = optionId;
       }
-    },
-    getMyVote() {
-      // Async check; will be set via listener
-      return myVote;
     }
   };
 }
 
 // LocalStorage fallback
 function initLocalVoting() {
-  const STORAGE_KEY = 'sd_votes_lunch';
+  function storageKey(topic) { return 'sd_votes_' + topic; }
 
-  function readStore() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  function readStore(topic) {
+    try { return JSON.parse(localStorage.getItem(storageKey(topic)) || '{}'); }
     catch (e) { return {}; }
   }
-  function writeStore(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  function writeStore(topic, data) {
+    localStorage.setItem(storageKey(topic), JSON.stringify(data));
   }
 
-  // Dispatch synthetic count updates
-  function broadcast() {
-    const store = readStore();
-    const counts = { shengji: 0, shaoezai: 0 };
-    for (const [optionId, voters] of Object.entries(store)) {
-      if (Array.isArray(voters)) counts[optionId] = voters.length;
-    }
-    // Store current user's vote for display
+  function broadcast(topic) {
+    const store = readStore(topic);
+    const counts = {};
+    TOPIC_OPTIONS[topic].forEach(o => counts[o] = 0);
     let found = null;
     for (const [optionId, voters] of Object.entries(store)) {
-      if (Array.isArray(voters) && voters.includes(uid)) { found = optionId; break; }
+      if (Array.isArray(voters)) {
+        counts[optionId] = voters.length;
+        if (voters.includes(uid)) found = optionId;
+      }
     }
-    myVote = found;
-    updateCounts(counts);
-    updateMyVoteUI();
+    myVotes[topic] = found;
+    updateCounts(topic, counts);
+    updateMyVoteUI(topic);
   }
 
-  // Initial load
-  broadcast();
+  TOPICS.forEach(topic => {
+    broadcast(topic);
+  });
 
-  // Listen for storage changes from other tabs
   window.addEventListener('storage', e => {
-    if (e.key === STORAGE_KEY) broadcast();
+    TOPICS.forEach(topic => {
+      if (e.key === storageKey(topic)) broadcast(topic);
+    });
   });
 
   return {
-    async vote(optionId) {
-      const store = readStore();
+    async vote(topic, optionId) {
+      const store = readStore(topic);
       // Remove from all options
       for (const key of Object.keys(store)) {
         if (Array.isArray(store[key])) {
           store[key] = store[key].filter(id => id !== uid);
         }
       }
-      // If toggling off current vote
-      if (myVote === optionId) {
-        myVote = null;
+      if (myVotes[topic] === optionId) {
+        myVotes[topic] = null;
       } else {
-        // Add to selected option
         if (!store[optionId]) store[optionId] = [];
         store[optionId].push(uid);
-        myVote = optionId;
+        myVotes[topic] = optionId;
       }
-      writeStore(store);
-      broadcast();
-    },
-    getMyVote() { return myVote; }
+      writeStore(topic, store);
+      broadcast(topic);
+    }
   };
 }
 
-// Initialize voting
+// Initialize
 if (FIREBASE_CONFIG) {
   votingImpl = initFirebaseVoting();
-  // Async check what user already voted for
   setTimeout(() => {
     const db = firebase.database();
-    db.ref('votes/lunch').once('value', snap => {
-      const data = snap.val() || {};
-      for (const [optionId, voters] of Object.entries(data)) {
-        if (voters && voters[uid]) {
-          myVote = optionId;
-          updateMyVoteUI();
-          break;
+    TOPICS.forEach(topic => {
+      db.ref('votes/' + topic).once('value', snap => {
+        const data = snap.val() || {};
+        for (const [optionId, voters] of Object.entries(data)) {
+          if (voters && voters[uid]) {
+            myVotes[topic] = optionId;
+            updateMyVoteUI(topic);
+            break;
+          }
         }
-      }
+      });
     });
   }, 500);
 } else {
@@ -535,51 +595,54 @@ if (FIREBASE_CONFIG) {
 }
 
 // ---- UI Updates ----
-function updateCounts(counts) {
+function updateCounts(topic, counts) {
   for (const [optionId, count] of Object.entries(counts)) {
-    const badge = document.getElementById('count-' + optionId);
+    const badge = document.getElementById('count-' + topic + '-' + optionId);
     if (badge) badge.textContent = count;
   }
 }
 
-function updateMyVoteUI() {
-  document.querySelectorAll('.vote-option').forEach(el => {
-    const optId = el.dataset.option;
-    if (optId === myVote) {
-      el.classList.add('voted');
-      const btn = document.getElementById('btn-' + optId);
-      if (btn) btn.textContent = '已投票';
-    } else {
-      el.classList.remove('voted');
-      const btn = document.getElementById('btn-' + optId);
-      if (btn) btn.textContent = '投票';
-    }
+function updateMyVoteUI(topic) {
+  const current = myVotes[topic];
+  const prefix = 'vote-' + topic + ' ';
+  document.querySelectorAll('#' + prefix + ' .vote-option').forEach(el => {
+    el.classList.remove('voted');
   });
+  TOPIC_OPTIONS[topic].forEach(optId => {
+    const btn = document.getElementById('btn-' + topic + '-' + optId);
+    if (btn) btn.textContent = '投票';
+  });
+  if (current) {
+    const el = document.querySelector('#vote-' + topic + ' .vote-option[data-option="' + current + '"]');
+    if (el) el.classList.add('voted');
+    const btn = document.getElementById('btn-' + topic + '-' + current);
+    if (btn) btn.textContent = '已投票';
+  }
 }
 
 // ---- Vote Handler ----
-async function handleVote(optionId) {
+async function handleVote(topic, optionId) {
   if (!votingImpl) {
-    toast('投票系统未初始化，请先配置 Firebase');
+    toast('投票系统未初始化');
     return;
   }
-  if (myVote === optionId) {
+  const labels = TOPIC_LABELS[topic];
+  if (myVotes[topic] === optionId) {
     toast('已取消投票');
-  } else if (myVote) {
-    toast('已改投：' + (optionId === 'shengji' ? '生记饭店' : '烧鹅再饭店'));
+  } else if (myVotes[topic]) {
+    toast('已改投：' + labels[optionId]);
   } else {
     toast('投票成功！');
   }
-  await votingImpl.vote(optionId);
-  updateMyVoteUI();
+  await votingImpl.vote(topic, optionId);
+  updateMyVoteUI(topic);
 }
 
-// Expose to global scope (onclick in HTML)
 window.handleVote = handleVote;
 
 // ---- Countdown ----
 (function updateCountdown() {
-  const tripDate = new Date(2026, 5, 13); // June 13, 2026 (month is 0-indexed)
+  const tripDate = new Date(2026, 5, 13);
   const now = new Date();
   const diff = tripDate - now;
   const el = document.getElementById('countdown');
@@ -594,7 +657,6 @@ window.handleVote = handleVote;
   }
 })();
 
-// ---- Periodic countdown update ----
 setInterval(() => {
   const tripDate = new Date(2026, 5, 13);
   const now = new Date();
