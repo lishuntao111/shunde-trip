@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>寻味顺德 · 两日游</title>
+<meta property="og:title" content="寻味顺德 · 两日游">
+<meta property="og:description" content="6.13-6.14 佛山顺德吃吃喝喝之旅">
+<style>
+  :root {
+    --red: #C0392B;
+    --orange: #E67E22;
+    --gold: #D4A017;
+    --bg: #FFF9F3;
+    --card: #FFFFFF;
+    --text: #2C3E50;
+    --sub: #7F8C8D;
+    --border: #EDE4D8;
+    --shadow: 0 2px 12px rgba(0,0,0,.06);
+    --radius: 12px;
+    --day1: #E67E22;
+    --day2: #C0392B;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width:640px; margin:0 auto; padding:0 16px 40px; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #E67E22 0%, #C0392B 100%);
+    color: #fff;
+    text-align: center;
+    padding: 36px 20px 28px;
+    border-radius: 0 0 24px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top:-40px; right:-30px;
+    width:120px; height:120px; background:rgba(255,255,255,.06); border-radius:50%;
+  }
+  .hero h1 { font-size:28px; font-weight:700; letter-spacing:2px; position:relative; }
+  .hero .date { font-size:15px; margin-top:6px; opacity:.9; position:relative; }
+  .hero .countdown {
+    margin-top:12px; display:inline-block; background:rgba(255,255,255,.18);
+    padding:4px 16px; border-radius:20px; font-size:13px; position:relative;
+  }
+
+  /* Day header */
+  .day-hd {
+    display:flex; align-items:center; gap:10px; margin:28px 0 12px;
+  }
+  .day-tag {
+    width:36px; height:36px; border-radius:50%; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:14px; flex-shrink:0;
+  }
+  .day1 .day-tag { background:var(--day1); }
+  .day2 .day-tag { background:var(--day2); }
+  .day-label { font-size:17px; font-weight:700; }
+  .day-sub  { font-size:13px; color:var(--sub); }
+
+  /* Cards */
+  .card {
+    background:var(--card); border-radius:var(--radius);
+    padding:16px; margin-bottom:12px; box-shadow:var(--shadow);
+  }
+  .card-title { font-size:16px; font-weight:700; margin-bottom:8px; }
+  .card-desc { font-size:14px; color:var(--sub); }
+  .tag {
+    display:inline-block; font-size:12px; padding:2px 8px; border-radius:4px;
+    margin-right:6px; margin-top:6px;
+  }
+  .tag-pro { background:#E8F5E9; color:#2E7D32; }
+  .tag-con { background:#FFF3E0; color:#E65100; }
+
+  /* Timeline dot */
+  .tl-item {
+    position:relative; padding-left:24px; margin-bottom:12px;
+  }
+  .tl-item::before {
+    content:''; position:absolute; left:6px; top:8px;
+    width:8px; height:8px; border-radius:50%; background:var(--gold);
+  }
+  .tl-item .tl-time { font-size:12px; color:var(--sub); }
+
+  /* Vote section */
+  .vote-section {
+    background:var(--card); border-radius:var(--radius);
+    padding:16px; margin-bottom:12px;
+    border-left:3px solid var(--gold);
+  }
+  .vote-title { font-size:15px; font-weight:700; margin-bottom:10px; }
+  .vote-option {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; border-radius:8px; margin-bottom:8px;
+    background:#FAFAFA; border:1.5px solid transparent;
+    transition:all .2s; cursor:pointer; user-select:none;
+  }
+  .vote-option.voted { border-color:var(--gold); background:#FFFDE7; }
+  .vote-option:active { transform:scale(.98); }
+  .vote-info { flex:1; }
+  .vote-name { font-size:15px; font-weight:600; }
+  .vote-detail { font-size:12px; color:var(--sub); margin-top:2px; }
+  .vote-right { display:flex; align-items:center; gap:8px; }
+  .vote-badge {
+    min-width:28px; height:28px; border-radius:14px;
+    background:var(--gold); color:#fff; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .vote-btn {
+    font-size:12px; padding:4px 12px; border-radius:14px;
+    border:1.5px solid var(--gold); color:var(--gold);
+    background:transparent; cursor:pointer; font-weight:600;
+    transition:all .2s; white-space:nowrap;
+  }
+  .vote-option.voted .vote-btn {
+    background:var(--gold); color:#fff;
+  }
+  .vote-note {
+    font-size:11px; color:var(--sub); margin-top:6px; text-align:center;
+  }
+
+  /* Hotel cards */
+  .hotel-card { margin-bottom:10px; }
+  .hotel-name { font-size:15px; font-weight:600; }
+  .hotel-pros { margin-top:4px; }
+  .hotel-cons { margin-top:2px; color:#E67E22; font-size:13px; }
+
+  /* Night section */
+  .night-card {
+    background:linear-gradient(135deg, #1a1a2e, #16213e);
+    color:#eee; border-radius:var(--radius);
+    padding:16px; margin-bottom:12px;
+  }
+  .night-card .card-title { color:#fff; }
+  .night-card .card-desc { color:#aaa; }
+
+  /* Footer */
+  .footer {
+    text-align:center; padding:24px 0 0;
+    font-size:12px; color:var(--sub);
+  }
+
+  /* Responsive imgs (if any) */
+  img { max-width:100%; height:auto; }
+
+  /* Toast */
+  .toast {
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    background:#333; color:#fff; padding:10px 24px; border-radius:20px;
+    font-size:14px; z-index:999; opacity:0; transition:opacity .3s;
+    pointer-events:none;
+  }
+  .toast.show { opacity:1; }
+
+  /* Divider */
+  .divider {
+    text-align:center; color:var(--sub); font-size:13px;
+    margin:20px 0 8px; letter-spacing:4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>寻味顺德</h1>
+  <div class="date">6.13 周六 - 6.14 周日 · 两日游</div>
+  <div class="countdown" id="countdown"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- ======= Day 1 ======= -->
+  <div class="day-hd day1">
+    <div class="day-tag">D1</div>
+    <div>
+      <div class="day-label">6.13 周六</div>
+      <div class="day-sub">深圳出发，自驾约 1.5 小时</div>
+    </div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-time">上午</div>
+    <div class="card-desc">睡到自然醒，从深圳自驾出发前往顺德</div>
+  </div>
+
+  <!-- 午餐投票 -->
+  <div class="vote-section">
+    <div class="vote-title">午餐 · 二选一投票</div>
+    <div id="vote-lunch">
+      <div class="vote-option" data-option="shengji" onclick="handleVote('shengji')">
+        <div class="vote-info">
+          <div class="vote-name">顺德区生记饭店</div>
+          <div class="vote-detail">
+            <span class="tag tag-pro">老牌饭店</span>
+            <span class="tag tag-pro">鸡做得非常好</span>
+            <span class="tag tag-con">位置偏僻</span>
+            <span class="tag tag-con">环境一般</span>
+          </div>
+        </div>
+        <div class="vote-right">
+          <div class="vote-badge" id="count-shengji">0</div>
+          <div class="vote-btn" id="btn-shengji">投票</div>
+        </div>
+      </div>
+      <div class="vote-option" data-option="shaoezai" onclick="handleVote('shaoezai')">
+        <div class="vote-info">
+          <div class="vote-name">烧鹅再饭店</div>
+          <div class="vote-detail">
+            <span class="tag tag-pro">烧鹅和粥一绝</span>
+            <span class="tag tag-con">去晚了没烧鹅腿</span>
+            <span class="tag tag-con">环境一般</span>
+          </div>
+        </div>
+        <div class="vote-right">
+          <div class="vote-badge" id="count-shaoezai">0</div>
+          <div class="vote-btn" id="btn-shaoezai">投票</div>
+        </div>
+      </div>
+    </div>
+    <div class="vote-note">点击即可投票，可随时修改。票数实时同步。</div>
+  </div>
+
+  <!-- 酒店 -->
+  <div class="card">
+    <div class="card-title">酒店推荐</div>
+    <div class="hotel-card">
+      <div class="hotel-name">喜悦门酒店</div>
+      <div class="hotel-pros">
+        <span class="tag tag-pro">性价比高</span>
+        <span class="tag tag-pro">附近吃的多</span>
+        <span class="tag tag-pro">离我家仅 500m</span>
+      </div>
+      <div class="hotel-cons">我没住过，无法担保体验</div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-name">歌顿酒店</div>
+      <div class="hotel-pros">
+        <span class="tag tag-pro">老牌五星级</span>
+      </div>
+      <div class="hotel-cons">老牌五星级，设施可能偏旧</div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-name">喜来登酒店</div>
+      <div class="hotel-pros">
+        <span class="tag tag-pro">环境好</span>
+        <span class="tag tag-pro">条件好</span>
+      </div>
+      <div class="hotel-cons">周末价格偏贵</div>
+    </div>
+  </div>
+
+  <!-- 晚餐 -->
+  <div class="card">
+    <div class="card-title">晚餐</div>
+    <div class="hotel-name">相聚幸福大排档</div>
+    <div style="margin-top:6px;">
+      <span class="tag tag-pro">卜卜贝一绝</span>
+      <span class="tag tag-pro">烤物一绝</span>
+      <span class="tag tag-con">环境比较吵</span>
+    </div>
+  </div>
+
+  <!-- 晚间 -->
+  <div class="card">
+    <div class="card-title">晚间活动</div>
+    <div class="tl-item">
+      <div>渔人码头散步消食</div>
+    </div>
+    <div class="tl-item">
+      <div>来我家打麻将 / 打牌</div>
+    </div>
+  </div>
+
+  <!-- 宵夜 -->
+  <div class="night-card">
+    <div class="card-title">如果吃宵夜</div>
+    <div class="card-desc" style="margin-top:4px;">双皮奶 + 姜撞奶</div>
+  </div>
+
+  <!-- ======= Day 2 ======= -->
+  <div class="divider">- - -</div>
+
+  <div class="day-hd day2">
+    <div class="day-tag">D2</div>
+    <div>
+      <div class="day-label">6.14 周日</div>
+      <div class="day-sub">逛吃逛吃 · 随性一天</div>
+    </div>
+  </div>
+
+  <!-- 早餐 -->
+  <div class="card">
+    <div class="card-title">早餐</div>
+    <div class="card-desc">大概率睡懒觉，建议直接吃酒店早餐就好。</div>
+    <div style="margin-top:6px;">
+      <span class="tag tag-pro">如果起得来</span>
+      去街边来一份顺德肠粉
+    </div>
+  </div>
+
+  <!-- 周日上午 -->
+  <div class="card">
+    <div class="card-title">上午目的地 · 二选一</div>
+    <div class="hotel-card">
+      <div class="hotel-name">和美术馆</div>
+      <div class="hotel-pros">
+        <span class="tag tag-pro">安藤忠雄设计</span>
+        <span class="tag tag-pro">很高级很出片</span>
+      </div>
+      <div class="hotel-cons">门票小贵，但可以在闲鱼买便宜票</div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-name">欢乐港湾</div>
+      <div class="hotel-pros">
+        <span class="tag tag-pro">热门地标</span>
+        <span class="tag tag-pro">大家都爱去</span>
+      </div>
+      <div class="hotel-cons">深圳也有，不必特意跑顺德看</div>
+    </div>
+  </div>
+
+  <!-- 午餐 -->
+  <div class="card">
+    <div class="card-title">午餐</div>
+    <div class="card-desc">你们想吃什么我陪着去点菜就好，不主动推荐。</div>
+  </div>
+
+  <!-- 下午 -->
+  <div class="card">
+    <div class="card-title">下午</div>
+    <div class="card-desc">看大家状态，决定是否返深。不赶时间，随意就好。</div>
+  </div>
+
+  <div class="footer">
+    祝大家吃得开心，玩得尽兴
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+
+<script>
+// =====================================================
+// 如果要启用跨设备实时投票，请按以下步骤操作：
+// 1. 前往 https://console.firebase.google.com/ 创建项目
+// 2. 在 Build > Realtime Database 中创建数据库（测试模式）
+// 3. 在 Project Settings 中添加 Web 应用，复制配置
+// 4. 将下面的 FIREBASE_CONFIG 替换为你的配置
+// =====================================================
+
+const FIREBASE_CONFIG = null;
+// 示例（取消注释并填入你的配置）：
+// const FIREBASE_CONFIG = {
+//   apiKey: "AIza...",
+//   authDomain: "xxx.firebaseapp.com",
+//   databaseURL: "https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app",
+//   projectId: "xxx",
+//   storageBucket: "xxx.appspot.com",
+//   messagingSenderId: "xxx",
+//   appId: "1:xxx:web:xxx"
+// };
+
+// ---- User ID ----
+function getUserId() {
+  let id = localStorage.getItem('sd_uid');
+  if (!id) {
+    id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    localStorage.setItem('sd_uid', id);
+  }
+  return id;
+}
+const uid = getUserId();
+
+// ---- Toast ----
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ---- Voting System ----
+let votingImpl = null; // { vote, on, off }
+let myVote = null;     // current option id or null
+
+function getCountsFromSnapshot(snap) {
+  const counts = {};
+  if (snap.exists()) {
+    const data = snap.val();
+    for (const [optionId, voters] of Object.entries(data)) {
+      counts[optionId] = voters ? Object.keys(voters).length : 0;
+    }
+  }
+  // Ensure all options have a count
+  for (const opt of ['shengji', 'shaoezai']) {
+    if (!(opt in counts)) counts[opt] = 0;
+  }
+  return counts;
+}
+
+// Firebase implementation
+function initFirebaseVoting() {
+  if (!FIREBASE_CONFIG) return false;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+  } catch (e) {
+    // Already initialized
+  }
+  const db = firebase.database();
+  const votesRef = db.ref('votes/lunch');
+
+  votesRef.on('value', snap => {
+    const counts = getCountsFromSnapshot(snap);
+    updateCounts(counts);
+  });
+
+  return {
+    async vote(optionId) {
+      // Remove old vote if switching
+      if (myVote && myVote !== optionId) {
+        await db.ref('votes/lunch/' + myVote + '/' + uid).remove();
+      }
+      if (myVote === optionId) {
+        // Toggle off
+        await db.ref('votes/lunch/' + optionId + '/' + uid).remove();
+        myVote = null;
+      } else {
+        await db.ref('votes/lunch/' + optionId + '/' + uid).set(true);
+        myVote = optionId;
+      }
+    },
+    getMyVote() {
+      // Async check; will be set via listener
+      return myVote;
+    }
+  };
+}
+
+// LocalStorage fallback
+function initLocalVoting() {
+  const STORAGE_KEY = 'sd_votes_lunch';
+
+  function readStore() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function writeStore(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  // Dispatch synthetic count updates
+  function broadcast() {
+    const store = readStore();
+    const counts = { shengji: 0, shaoezai: 0 };
+    for (const [optionId, voters] of Object.entries(store)) {
+      if (Array.isArray(voters)) counts[optionId] = voters.length;
+    }
+    // Store current user's vote for display
+    let found = null;
+    for (const [optionId, voters] of Object.entries(store)) {
+      if (Array.isArray(voters) && voters.includes(uid)) { found = optionId; break; }
+    }
+    myVote = found;
+    updateCounts(counts);
+    updateMyVoteUI();
+  }
+
+  // Initial load
+  broadcast();
+
+  // Listen for storage changes from other tabs
+  window.addEventListener('storage', e => {
+    if (e.key === STORAGE_KEY) broadcast();
+  });
+
+  return {
+    async vote(optionId) {
+      const store = readStore();
+      // Remove from all options
+      for (const key of Object.keys(store)) {
+        if (Array.isArray(store[key])) {
+          store[key] = store[key].filter(id => id !== uid);
+        }
+      }
+      // If toggling off current vote
+      if (myVote === optionId) {
+        myVote = null;
+      } else {
+        // Add to selected option
+        if (!store[optionId]) store[optionId] = [];
+        store[optionId].push(uid);
+        myVote = optionId;
+      }
+      writeStore(store);
+      broadcast();
+    },
+    getMyVote() { return myVote; }
+  };
+}
+
+// Initialize voting
+if (FIREBASE_CONFIG) {
+  votingImpl = initFirebaseVoting();
+  // Async check what user already voted for
+  setTimeout(() => {
+    const db = firebase.database();
+    db.ref('votes/lunch').once('value', snap => {
+      const data = snap.val() || {};
+      for (const [optionId, voters] of Object.entries(data)) {
+        if (voters && voters[uid]) {
+          myVote = optionId;
+          updateMyVoteUI();
+          break;
+        }
+      }
+    });
+  }, 500);
+} else {
+  votingImpl = initLocalVoting();
+}
+
+// ---- UI Updates ----
+function updateCounts(counts) {
+  for (const [optionId, count] of Object.entries(counts)) {
+    const badge = document.getElementById('count-' + optionId);
+    if (badge) badge.textContent = count;
+  }
+}
+
+function updateMyVoteUI() {
+  document.querySelectorAll('.vote-option').forEach(el => {
+    const optId = el.dataset.option;
+    if (optId === myVote) {
+      el.classList.add('voted');
+      const btn = document.getElementById('btn-' + optId);
+      if (btn) btn.textContent = '已投票';
+    } else {
+      el.classList.remove('voted');
+      const btn = document.getElementById('btn-' + optId);
+      if (btn) btn.textContent = '投票';
+    }
+  });
+}
+
+// ---- Vote Handler ----
+async function handleVote(optionId) {
+  if (!votingImpl) {
+    toast('投票系统未初始化，请先配置 Firebase');
+    return;
+  }
+  if (myVote === optionId) {
+    toast('已取消投票');
+  } else if (myVote) {
+    toast('已改投：' + (optionId === 'shengji' ? '生记饭店' : '烧鹅再饭店'));
+  } else {
+    toast('投票成功！');
+  }
+  await votingImpl.vote(optionId);
+  updateMyVoteUI();
+}
+
+// Expose to global scope (onclick in HTML)
+window.handleVote = handleVote;
+
+// ---- Countdown ----
+(function updateCountdown() {
+  const tripDate = new Date(2026, 5, 13); // June 13, 2026 (month is 0-indexed)
+  const now = new Date();
+  const diff = tripDate - now;
+  const el = document.getElementById('countdown');
+  if (diff < 0) {
+    el.textContent = '旅途进行中...';
+  } else if (diff < 86400000) {
+    const hours = Math.floor(diff / 3600000);
+    el.textContent = '距离出发还有 ' + hours + ' 小时';
+  } else {
+    const days = Math.ceil(diff / 86400000);
+    el.textContent = '距离出发还有 ' + days + ' 天';
+  }
+})();
+
+// ---- Periodic countdown update ----
+setInterval(() => {
+  const tripDate = new Date(2026, 5, 13);
+  const now = new Date();
+  const diff = tripDate - now;
+  const el = document.getElementById('countdown');
+  if (diff < 0) {
+    el.textContent = '旅途进行中...';
+  } else if (diff < 86400000) {
+    const hours = Math.floor(diff / 3600000);
+    el.textContent = '距离出发还有 ' + hours + ' 小时';
+  } else {
+    const days = Math.ceil(diff / 86400000);
+    el.textContent = '距离出发还有 ' + days + ' 天';
+  }
+}, 60000);
+</script>
+
+</body>
+</html>
