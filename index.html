@@ -182,6 +182,38 @@
 
   /* Section icon style */
   .section-icon { font-size:20px; }
+
+  /* Idea input */
+  .idea-input-wrap {
+    display:flex; gap:8px; margin-top:10px;
+  }
+  .idea-input-wrap input {
+    flex:1; padding:10px 12px; border:1.5px solid var(--border);
+    border-radius:8px; font-size:14px; outline:none;
+    font-family:inherit; background:#FAFAFA;
+    transition:border-color .2s;
+  }
+  .idea-input-wrap input:focus { border-color:var(--gold); background:#fff; }
+  .idea-submit {
+    padding:10px 16px; background:var(--gold); color:#fff;
+    border:none; border-radius:8px; font-size:14px; font-weight:600;
+    cursor:pointer; white-space:nowrap; transition:opacity .2s;
+  }
+  .idea-submit:active { opacity:.8; }
+  .idea-list { margin-top:10px; }
+  .idea-item {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding:8px 10px; background:#FFFDE7; border-radius:8px;
+    margin-bottom:6px; font-size:14px; gap:8px;
+  }
+  .idea-text { flex:1; word-break:break-all; }
+  .idea-del {
+    color:#ccc; cursor:pointer; font-size:18px; line-height:1;
+    flex-shrink:0; padding:0 4px; transition:color .2s;
+  }
+  .idea-del:hover { color:var(--red); }
+  .idea-empty { font-size:12px; color:var(--sub); text-align:center; padding:8px; }
+
 </style>
 </head>
 <body>
@@ -314,7 +346,7 @@
     <div class="card-desc">大概率睡懒觉，建议直接吃酒店早餐就好。</div>
     <div style="margin-top:6px;">
       <span class="tag tag-pro">如果起得来</span>
-      去街边来一份顺德肠粉
+      我带你们去吃一家街边肠粉
     </div>
   </div>
 
@@ -355,15 +387,25 @@
   </div>
 
   <!-- 午餐 -->
-  <div class="card">
+  <div class="card" id="card-lunch-ideas">
     <div class="card-title">午餐</div>
-    <div class="card-desc">你们想吃什么我陪着去点菜就好，不主动推荐。</div>
+    <div class="card-desc">你们想吃什么我陪着去点菜就好，不主动推荐。可以在下面写下你的想法：</div>
+    <div class="idea-input-wrap">
+      <input type="text" id="input-lunch" placeholder="我想吃..." maxlength="100" onkeydown="if(event.key==='Enter')submitIdea('lunch')">
+      <button class="idea-submit" onclick="submitIdea('lunch')">提交</button>
+    </div>
+    <div class="idea-list" id="list-lunch"></div>
   </div>
 
   <!-- 下午 -->
-  <div class="card">
+  <div class="card" id="card-afternoon-ideas">
     <div class="card-title">下午</div>
-    <div class="card-desc">看大家状态，决定是否返深。不赶时间，随意就好。</div>
+    <div class="card-desc">看大家状态，决定是否返深。有什么想法可以说说：</div>
+    <div class="idea-input-wrap">
+      <input type="text" id="input-afternoon" placeholder="比如：去逛逛xxx、早点回..." maxlength="100" onkeydown="if(event.key==='Enter')submitIdea('afternoon')">
+      <button class="idea-submit" onclick="submitIdea('afternoon')">提交</button>
+    </div>
+    <div class="idea-list" id="list-afternoon"></div>
   </div>
 
   <!-- ==================== 酒店推荐（放在最后） ==================== -->
@@ -381,12 +423,12 @@
         <span class="tag tag-pro">附近吃的多</span>
         <span class="tag tag-pro">离我家仅 500m</span>
       </div>
-      <div class="hotel-cons">我住过，无法担保体验</div>
+      <div class="hotel-cons">我没住过，无法担保体验</div>
     </div>
 
     <div class="hotel-card">
       <div class="hotel-name">歌顿酒店</div>
-      <div class="hotel-addr">顺德区大良街道（具体地址请地图搜索确认）</div>
+      <div class="hotel-addr">容桂街道容桂大道（具体地址请地图搜索确认）</div>
       <div class="hotel-price">约 ¥400 - ¥700 / 晚</div>
       <div class="hotel-pros">
         <span class="tag tag-pro">老牌五星级</span>
@@ -639,6 +681,81 @@ async function handleVote(topic, optionId) {
 }
 
 window.handleVote = handleVote;
+
+// ---- Idea/Note System (shared notes for lunch & afternoon) ----
+const IDEA_TOPICS = ['lunch', 'afternoon'];
+
+function ideaStorageKey(topic) { return 'sd_ideas_' + topic; }
+
+function readIdeas(topic) {
+  try { return JSON.parse(localStorage.getItem(ideaStorageKey(topic)) || '[]'); }
+  catch (e) { return []; }
+}
+
+function writeIdeas(topic, data) {
+  localStorage.setItem(ideaStorageKey(topic), JSON.stringify(data));
+}
+
+function renderIdeas(topic) {
+  const list = document.getElementById('list-' + topic);
+  const items = readIdeas(topic);
+  if (!items.length) {
+    list.innerHTML = '<div class="idea-empty">还没有人留言，来说说你的想法吧</div>';
+    return;
+  }
+  list.innerHTML = items.map((item, idx) => {
+    const isMine = item.uid === uid;
+    return '<div class="idea-item">' +
+      '<span class="idea-text">' + escapeHtml(item.text) + '</span>' +
+      (isMine ? '<span class="idea-del" onclick="deleteIdea(\'' + topic + '\',' + idx + ')">×</span>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function submitIdea(topic) {
+  const input = document.getElementById('input-' + topic);
+  const text = input.value.trim();
+  if (!text) { toast('请输入内容'); return; }
+  const items = readIdeas(topic);
+  // If this user already has an entry, replace it; otherwise append
+  const existingIdx = items.findIndex(item => item.uid === uid);
+  if (existingIdx >= 0) {
+    items[existingIdx].text = text;
+    toast('已更新你的留言');
+  } else {
+    items.push({ uid: uid, text: text });
+    toast('留言成功！');
+  }
+  writeIdeas(topic, items);
+  input.value = '';
+  renderIdeas(topic);
+}
+
+function deleteIdea(topic, idx) {
+  const items = readIdeas(topic);
+  items.splice(idx, 1);
+  writeIdeas(topic, items);
+  renderIdeas(topic);
+  toast('已删除');
+}
+
+// Expose to global scope
+window.submitIdea = submitIdea;
+window.deleteIdea = deleteIdea;
+
+// Initial render
+IDEA_TOPICS.forEach(topic => renderIdeas(topic));
+
+// Listen for cross-tab updates
+window.addEventListener('storage', e => {
+  IDEA_TOPICS.forEach(topic => {
+    if (e.key === ideaStorageKey(topic)) renderIdeas(topic);
+  });
+});
 
 // ---- Countdown ----
 (function updateCountdown() {
