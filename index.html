@@ -386,9 +386,9 @@ var myVotes = {};
 var localData = { votes: {}, ideas: {} };
 var saveTimer = null;
 
-// Load data from GitHub (public repo = no auth needed for read)
+// Load data from GitHub (token required to avoid 60/hr anonymous rate limit)
 function fetchData() {
-  fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store' })
+  fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store', headers: { 'Authorization': 'token ' + GH_TOKEN } })
     .then(function(r) { return r.json(); })
     .then(function(info) {
       var remote = JSON.parse(decodeURIComponent(escape(atob(info.content))));
@@ -440,7 +440,7 @@ function saveData() {
   saveTimer = setTimeout(function() {
     saveTimer = null;
     // Step 1: read current remote data
-    fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store' })
+    fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store', headers: { 'Authorization': 'token ' + GH_TOKEN } })
       .then(function(r) { return r.json(); })
       .then(function(info) {
         var remote = JSON.parse(decodeURIComponent(escape(atob(info.content))));
