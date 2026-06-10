@@ -356,20 +356,13 @@
 
 <script>
 // =====================================================
-// GitHub data.json 作为数据库，跨设备实时同步
-// Token 存入 localStorage，只在写入时需要
-// 读取走 raw.githubusercontent.com（无需认证）
+// 基于 crudcrud.com 的跨设备实时同步
+// 原生支持 CORS，浏览器直接读写，无需任何配置
 // =====================================================
 
-var GH_TOKEN_KEY = 'sd_gh_pat';
-var GH_OWNER = 'lishuntao111';
-var GH_REPO = 'shunde-trip';
-var DATA_FILE = 'data.json';
-var RAW_URL = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/main/' + DATA_FILE;
-var API_URL = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + DATA_FILE;
-
-// 默认 token（仅有此仓库 Contents 写入权限，运行时拼接以避免扫描器误报）
-var DEFAULT_TOKEN = "ghp_" + "9OVmIcZcSf6lIeIWrjdkNtxmr3bM0W3ptSbv";
+var DB_URL = 'https://crudcrud.com/api/092d00eb4f5744c8917d03885fb1430b/shunde-data';
+var DOC_ID_KEY = 'sd_doc_id';
+var DOC_ID = localStorage.getItem(DOC_ID_KEY);
 
 // ---- User ID ----
 function getUserId() {
@@ -392,11 +385,6 @@ function toast(msg) {
   toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2000);
 }
 
-// ---- Token ----
-function getToken() {
-  return localStorage.getItem(GH_TOKEN_KEY) || DEFAULT_TOKEN;
-}
-
 // ---- Topics ----
 var TOPICS = ['lunch','dinner','morning'];
 var TOPIC_OPTIONS = {
@@ -414,7 +402,38 @@ var myVotes = {};
 var localData = { votes: {}, ideas: {} };
 var writeLock = false;
 
-// ---- Merge: remote data wins for existing keys, local fills gaps ----
+// ---- crudcrud API: single document, GET + PUT ----
+// GET /api/ENDPOINT/shunde-data/ID  => read
+// PUT /api/ENDPOINT/shunde-data/ID  => write (replace entire doc)
+
+// ---- Read from crudcrud ----
+function fetchData() {
+  if (!DOC_ID) {
+    // First time: no doc yet, just use empty data
+    loadLocalBackup();
+    renderAll();
+    return;
+  }
+
+  fetch(DB_URL + '/' + DOC_ID + '?t=' + Date.now(), { cache: 'no-store' })
+    .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
+    .then(function(remote) {
+      var local = loadLocalBackup();
+      // Merge: remote wins, local fills gaps
+      localData = deepMerge(local, remote);
+      if (!localData.votes) localData.votes = {};
+      if (!localData.ideas) localData.ideas = {};
+      localStorage.setItem('sd_local_data', JSON.stringify(localData));
+      renderAll();
+      updateSyncStatus(true);
+    })
+    .catch(function() {
+      localData = loadLocalBackup();
+      renderAll();
+      updateSyncStatus(false);
+    });
+}
+
 function deepMerge(base, overlay) {
   var result = {};
   for (var k in base) result[k] = base[k];
@@ -429,32 +448,12 @@ function deepMerge(base, overlay) {
 }
 
 function loadLocalBackup() {
-  try { return JSON.parse(localStorage.getItem('sd_local_data') || '{}'); }
-  catch(e) { return {}; }
-}
-
-// ---- Read from GitHub raw (no auth needed) ----
-function fetchData() {
-  fetch(RAW_URL + '?t=' + Date.now(), { cache: 'no-store' })
-    .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
-    .then(function(remote) {
-      var local = loadLocalBackup();
-      // Merge: remote gets priority, but local fills in gaps (CDN may be stale)
-      localData = deepMerge(local, remote || {});
-      if (!localData.votes) localData.votes = {};
-      if (!localData.ideas) localData.ideas = {};
-
-      renderAll();
-      updateSyncStatus(true);
-    })
-    .catch(function() {
-      // GitHub unreachable, use local data
-      localData = loadLocalBackup();
-      if (!localData.votes) localData.votes = {};
-      if (!localData.ideas) localData.ideas = {};
-      renderAll();
-      updateSyncStatus(false);
-    });
+  try {
+    var d = JSON.parse(localStorage.getItem('sd_local_data') || '{}');
+    if (!d.votes) d.votes = {};
+    if (!d.ideas) d.ideas = {};
+    return d;
+  } catch(e) { return { votes: {}, ideas: {} }; }
 }
 
 function renderAll() {
@@ -474,51 +473,31 @@ function renderAll() {
   renderIdeas('afternoon');
 }
 
-// ---- Write to GitHub ----
+// ---- Write to crudcrud ----
 function saveData() {
-  // Always persist locally first
   localStorage.setItem('sd_local_data', JSON.stringify(localData));
-
-  var token = getToken();
-  if (!token) {
-    toast('未配置 token，数据仅保存在本地。');
-    return;
-  }
 
   if (writeLock) { setTimeout(saveData, 500); return; }
   writeLock = true;
 
-  // Get current sha then write
-  fetch(API_URL + '?t=' + Date.now(), {
-    headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+  var url = DOC_ID ? DB_URL + '/' + DOC_ID : DB_URL;
+
+  fetch(url, {
+    method: DOC_ID ? 'PUT' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(localData)
   })
-  .then(function(r) { return r.json(); })
-  .then(function(info) {
-    if (!info.sha) throw new Error('no sha: ' + (info.message || 'unknown'));
-    var content = JSON.stringify(localData, null, 2);
-    var bytes = new TextEncoder().encode(content);
-    var binary = '';
-    for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-    var b64 = btoa(binary);
-    return fetch(API_URL, {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'token ' + token,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message: 'update trip data', content: b64, sha: info.sha })
-    });
+  .then(function(r) {
+    if (!r.ok) throw new Error('write failed: ' + r.status);
+    return r.json();
   })
-  .then(function(r) { return r.json(); })
   .then(function(result) {
     writeLock = false;
-    if (result.content) {
-      updateSyncStatus(true);
-    } else if (result.message) {
-      console.error('GitHub write error:', result.message);
-      updateSyncStatus(false);
+    if (!DOC_ID && result._id) {
+      DOC_ID = result._id;
+      localStorage.setItem(DOC_ID_KEY, DOC_ID);
     }
+    updateSyncStatus(true);
   })
   .catch(function(err) {
     writeLock = false;
@@ -643,29 +622,18 @@ function updateSyncStatus(ok) {
     el.textContent = '✅ 实时同步已就绪';
     el.className = 'sync-status online';
   } else {
-    el.textContent = '⚠ 同步失败，重试中...';
+    el.textContent = '⚠ 网络异常，数据已存本地，恢复后自动同步';
     el.className = 'sync-status offline';
   }
 }
 
-// ---- Manual: click status to set token ----
-document.getElementById('sync-status').addEventListener('click', function() {
-  var token = prompt('粘贴你的 GitHub fine-grained token\n（仅限 lishuntao111/shunde-trip 仓库，Contents 读写权限）\n\nToken 会被保存在你的浏览器中，不会上传到服务器。', getToken() || '');
-  if (token && token.trim()) {
-    localStorage.setItem(GH_TOKEN_KEY, token.trim());
-    toast('Token 已保存！现在支持跨设备同步了');
-    saveData();
-  }
-});
-
-// ---- Init: show local data immediately, then sync ----
+// ---- Init ----
 localData = loadLocalBackup();
 if (!localData.votes) localData.votes = {};
 if (!localData.ideas) localData.ideas = {};
 renderAll();
 fetchData();
 
-// Poll every 4 seconds
 setInterval(fetchData, 4000);
 
 // ---- Countdown ----
