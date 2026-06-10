@@ -8,46 +8,27 @@
 <meta property="og:description" content="6.13-6.14 佛山顺德吃吃喝喝之旅">
 <style>
   :root {
-    --red: #C0392B;
-    --orange: #E67E22;
-    --gold: #D4A017;
-    --bg: #FFF9F3;
-    --card: #FFFFFF;
-    --text: #2C3E50;
-    --sub: #7F8C8D;
-    --border: #EDE4D8;
-    --shadow: 0 2px 12px rgba(0,0,0,.06);
-    --radius: 12px;
-    --day1: #E67E22;
-    --day2: #C0392B;
+    --red: #C0392B; --orange: #E67E22; --gold: #D4A017;
+    --bg: #FFF9F3; --card: #FFFFFF; --text: #2C3E50; --sub: #7F8C8D;
+    --border: #EDE4D8; --shadow: 0 2px 12px rgba(0,0,0,.06);
+    --radius: 12px; --day1: #E67E22; --day2: #C0392B;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
     font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
+    background: var(--bg); color: var(--text); line-height: 1.7;
     -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width:640px; margin:0 auto; padding:0 16px 40px; }
 
-  /* Hero */
   .hero {
     background: linear-gradient(135deg, #E67E22 0%, #C0392B 100%);
-    color: #fff;
-    text-align: center;
-    padding: 36px 20px 28px;
-    border-radius: 0 0 24px 24px;
-    position: relative;
-    overflow: hidden;
+    color: #fff; text-align: center; padding: 36px 20px 28px;
+    border-radius: 0 0 24px 24px; position: relative; overflow: hidden;
   }
   .hero::before {
     content: ''; position: absolute; top:-40px; right:-30px;
     width:120px; height:120px; background:rgba(255,255,255,.06); border-radius:50%;
-  }
-  .hero::after {
-    content: ''; position: absolute; bottom:-30px; left:-20px;
-    width:80px; height:80px; background:rgba(255,255,255,.04); border-radius:50%;
   }
   .hero h1 { font-size:28px; font-weight:700; letter-spacing:2px; position:relative; }
   .hero .date { font-size:15px; margin-top:6px; opacity:.9; position:relative; }
@@ -80,9 +61,7 @@
   .tag-pro { background:#E8F5E9; color:#2E7D32; }
   .tag-con { background:#FFF3E0; color:#E65100; }
 
-  .tl-item {
-    position:relative; padding-left:24px; margin-bottom:12px;
-  }
+  .tl-item { position:relative; padding-left:24px; margin-bottom:12px; }
   .tl-item::before {
     content:''; position:absolute; left:6px; top:8px;
     width:8px; height:8px; border-radius:50%; background:var(--gold);
@@ -105,7 +84,7 @@
   .vote-info { flex:1; }
   .vote-name { font-size:15px; font-weight:600; }
   .vote-detail { font-size:12px; color:var(--sub); margin-top:2px; }
-  .vote-right { display:flex; align-items:center; gap:8px; }
+  .vote-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
   .vote-badge {
     min-width:28px; height:28px; border-radius:14px;
     background:var(--gold); color:#fff; font-size:12px; font-weight:700;
@@ -129,21 +108,18 @@
 
   .night-card {
     background:linear-gradient(135deg, #1a1a2e, #16213e);
-    color:#eee; border-radius:var(--radius);
-    padding:16px; margin-bottom:12px;
+    color:#eee; border-radius:var(--radius); padding:16px; margin-bottom:12px;
   }
   .night-card .card-title { color:#fff; }
   .night-card .card-desc { color:#aaa; }
 
   .footer { text-align:center; padding:24px 0 0; font-size:12px; color:var(--sub); }
   .divider { text-align:center; color:var(--sub); font-size:13px; margin:20px 0 8px; letter-spacing:4px; }
-  img { max-width:100%; height:auto; }
 
   .toast {
     position:fixed; top:20px; left:50%; transform:translateX(-50%);
     background:#333; color:#fff; padding:10px 24px; border-radius:20px;
-    font-size:14px; z-index:999; opacity:0; transition:opacity .3s;
-    pointer-events:none;
+    font-size:14px; z-index:999; opacity:0; transition:opacity .3s; pointer-events:none;
   }
   .toast.show { opacity:1; }
 
@@ -174,11 +150,9 @@
   .idea-del:hover { color:var(--red); }
   .idea-empty { font-size:12px; color:var(--sub); text-align:center; padding:8px; }
 
-  /* Sync status */
-  .sync-status {
-    text-align:center; font-size:11px; color:var(--sub); margin-top:16px;
-  }
+  .sync-status { text-align:center; font-size:11px; margin-top:16px; }
   .sync-status.online { color:#27ae60; }
+  .sync-status.offline { color:#e67e22; }
 </style>
 </head>
 <body>
@@ -194,97 +168,68 @@
   <!-- ==================== Day 1 ==================== -->
   <div class="day-hd day1">
     <div class="day-tag">D1</div>
-    <div>
-      <div class="day-label">6.13 周六</div>
-      <div class="day-sub">深圳出发，自驾约 1.5h</div>
-    </div>
+    <div><div class="day-label">6.13 周六</div><div class="day-sub">深圳出发，自驾约 1.5h</div></div>
   </div>
 
-  <div class="tl-item">
-    <div class="tl-time">上午</div>
-    <div class="card-desc">睡到自然醒，深圳自驾出发前往顺德</div>
-  </div>
+  <div class="tl-item"><div class="tl-time">上午</div><div class="card-desc">睡到自然醒，深圳自驾出发前往顺德</div></div>
 
-  <!-- 午餐投票 -->
   <div class="vote-section">
     <div class="vote-title">午餐 · 二选一投票</div>
     <div id="vote-lunch">
-      <div class="vote-option" data-option="shengji" onclick="handleVote('lunch', 'shengji')">
+      <div class="vote-option" data-option="shengji" onclick="handleVote('lunch','shengji')">
         <div class="vote-info">
           <div class="vote-name">顺德区生记饭店</div>
           <div class="vote-detail">
-            <span class="tag tag-pro">老牌饭店</span>
-            <span class="tag tag-pro">鸡做得非常好</span>
-            <span class="tag tag-con">位置偏僻</span>
-            <span class="tag tag-con">环境一般</span>
+            <span class="tag tag-pro">老牌饭店</span><span class="tag tag-pro">鸡做得非常好</span>
+            <span class="tag tag-con">位置偏僻</span><span class="tag tag-con">环境一般</span>
           </div>
         </div>
-        <div class="vote-right">
-          <div class="vote-badge" id="count-lunch-shengji">0</div>
-          <div class="vote-btn" id="btn-lunch-shengji">投票</div>
-        </div>
+        <div class="vote-right"><div class="vote-badge" id="count-lunch-shengji">0</div><div class="vote-btn" id="btn-lunch-shengji">投票</div></div>
       </div>
-      <div class="vote-option" data-option="shaoezai" onclick="handleVote('lunch', 'shaoezai')">
+      <div class="vote-option" data-option="shaoezai" onclick="handleVote('lunch','shaoezai')">
         <div class="vote-info">
           <div class="vote-name">烧鹅再饭店</div>
           <div class="vote-detail">
             <span class="tag tag-pro">烧鹅和粥一绝</span>
-            <span class="tag tag-con">去晚了没烧鹅腿</span>
-            <span class="tag tag-con">环境一般</span>
+            <span class="tag tag-con">去晚了没烧鹅腿</span><span class="tag tag-con">环境一般</span>
           </div>
         </div>
-        <div class="vote-right">
-          <div class="vote-badge" id="count-lunch-shaoezai">0</div>
-          <div class="vote-btn" id="btn-lunch-shaoezai">投票</div>
-        </div>
+        <div class="vote-right"><div class="vote-badge" id="count-lunch-shaoezai">0</div><div class="vote-btn" id="btn-lunch-shaoezai">投票</div></div>
       </div>
     </div>
-    <div class="vote-note">点击即可投票，可随时修改。支持多人实时同步。</div>
+    <div class="vote-note">点击投票，可随时修改。所有人实时可见（3秒轮询）。</div>
   </div>
 
-  <!-- 晚餐投票 -->
   <div class="vote-section">
     <div class="vote-title">晚餐 · 二选一投票</div>
     <div id="vote-dinner">
-      <div class="vote-option" data-option="xingfu" onclick="handleVote('dinner', 'xingfu')">
+      <div class="vote-option" data-option="xingfu" onclick="handleVote('dinner','xingfu')">
         <div class="vote-info">
           <div class="vote-name">相聚幸福大排档</div>
           <div class="vote-detail">
-            <span class="tag tag-pro">卜卜贝一绝</span>
-            <span class="tag tag-pro">烤物一绝</span>
+            <span class="tag tag-pro">卜卜贝一绝</span><span class="tag tag-pro">烤物一绝</span>
             <span class="tag tag-con">环境比较吵</span>
           </div>
         </div>
-        <div class="vote-right">
-          <div class="vote-badge" id="count-dinner-xingfu">0</div>
-          <div class="vote-btn" id="btn-dinner-xingfu">投票</div>
-        </div>
+        <div class="vote-right"><div class="vote-badge" id="count-dinner-xingfu">0</div><div class="vote-btn" id="btn-dinner-xingfu">投票</div></div>
       </div>
-      <div class="vote-option" data-option="zijixiang" onclick="handleVote('dinner', 'zijixiang')">
+      <div class="vote-option" data-option="zijixiang" onclick="handleVote('dinner','zijixiang')">
         <div class="vote-info">
           <div class="vote-name">你们自己想吃啥我陪着去</div>
-          <div class="vote-detail">
-            <span class="tag tag-pro">大家商量</span>
-            <span class="tag tag-pro">随心所欲</span>
-          </div>
+          <div class="vote-detail"><span class="tag tag-pro">大家商量</span><span class="tag tag-pro">随心所欲</span></div>
         </div>
-        <div class="vote-right">
-          <div class="vote-badge" id="count-dinner-zijixiang">0</div>
-          <div class="vote-btn" id="btn-dinner-zijixiang">投票</div>
-        </div>
+        <div class="vote-right"><div class="vote-badge" id="count-dinner-zijixiang">0</div><div class="vote-btn" id="btn-dinner-zijixiang">投票</div></div>
       </div>
     </div>
-    <div class="vote-note">点击即可投票，可随时修改。支持多人实时同步。</div>
+    <div class="vote-note">点击投票，可随时修改。所有人实时可见（3秒轮询）。</div>
   </div>
 
-  <!-- 晚间活动 -->
   <div class="card">
     <div class="card-title">晚间活动</div>
     <div class="tl-item"><div>渔人码头散步消食</div></div>
     <div class="tl-item"><div>来我家打麻将 / 打牌</div></div>
   </div>
 
-  <!-- 宵夜 -->
   <div class="night-card">
     <div class="card-title">如果吃宵夜</div>
     <div class="card-desc" style="margin-top:4px;">双皮奶 + 姜撞奶</div>
@@ -295,62 +240,45 @@
 
   <div class="day-hd day2">
     <div class="day-tag">D2</div>
-    <div>
-      <div class="day-label">6.14 周日</div>
-      <div class="day-sub">逛吃逛吃 · 随性一天</div>
-    </div>
+    <div><div class="day-label">6.14 周日</div><div class="day-sub">逛吃逛吃 · 随性一天</div></div>
   </div>
 
-  <!-- 早餐 -->
   <div class="card">
     <div class="card-title">早餐</div>
     <div class="card-desc">大概率睡懒觉，建议直接吃酒店早餐就好。</div>
-    <div style="margin-top:6px;">
-      <span class="tag tag-pro">如果起得来</span>
-      我带你们去吃一家街边肠粉
-    </div>
+    <div style="margin-top:6px;"><span class="tag tag-pro">如果起得来</span> 我带你们去吃一家街边肠粉</div>
   </div>
 
-  <!-- 周日上午投票 -->
   <div class="vote-section">
     <div class="vote-title">上午活动 · 二选一投票</div>
     <div id="vote-morning">
-      <div class="vote-option" data-option="museum" onclick="handleVote('morning', 'museum')">
+      <div class="vote-option" data-option="museum" onclick="handleVote('morning','museum')">
         <div class="vote-info">
           <div class="vote-name">和美术馆</div>
           <div class="vote-detail">
-            <span class="tag tag-pro">安藤忠雄设计</span>
-            <span class="tag tag-pro">很高级很出片</span>
+            <span class="tag tag-pro">安藤忠雄设计</span><span class="tag tag-pro">很高级很出片</span>
             <span class="tag tag-con">门票小贵（咸鱼可买便宜票）</span>
           </div>
         </div>
-        <div class="vote-right">
-          <div class="vote-badge" id="count-morning-museum">0</div>
-          <div class="vote-btn" id="btn-morning-museum">投票</div>
-        </div>
+        <div class="vote-right"><div class="vote-badge" id="count-morning-museum">0</div><div class="vote-btn" id="btn-morning-museum">投票</div></div>
       </div>
-      <div class="vote-option" data-option="harbour" onclick="handleVote('morning', 'harbour')">
+      <div class="vote-option" data-option="harbour" onclick="handleVote('morning','harbour')">
         <div class="vote-info">
           <div class="vote-name">欢乐港湾</div>
           <div class="vote-detail">
-            <span class="tag tag-pro">热门地标</span>
-            <span class="tag tag-pro">大家都爱去</span>
+            <span class="tag tag-pro">热门地标</span><span class="tag tag-pro">大家都爱去</span>
             <span class="tag tag-con">深圳也有，不必特意跑顺德看</span>
           </div>
         </div>
-        <div class="vote-right">
-          <div class="vote-badge" id="count-morning-harbour">0</div>
-          <div class="vote-btn" id="btn-morning-harbour">投票</div>
-        </div>
+        <div class="vote-right"><div class="vote-badge" id="count-morning-harbour">0</div><div class="vote-btn" id="btn-morning-harbour">投票</div></div>
       </div>
     </div>
-    <div class="vote-note">点击即可投票，可随时修改。支持多人实时同步。</div>
+    <div class="vote-note">点击投票，可随时修改。所有人实时可见（3秒轮询）。</div>
   </div>
 
-  <!-- 午餐留言 -->
-  <div class="card" id="card-lunch-ideas">
+  <div class="card">
     <div class="card-title">午餐</div>
-    <div class="card-desc">你们想吃什么我陪着去点菜就好，不主动推荐。可以在下面写下你的想法：</div>
+    <div class="card-desc">你们想吃什么我陪着去点菜就好，不主动推荐。写下你的想法：</div>
     <div class="idea-input-wrap">
       <input type="text" id="input-lunch" placeholder="我想吃..." maxlength="100" onkeydown="if(event.key==='Enter')submitIdea('lunch')">
       <button class="idea-submit" onclick="submitIdea('lunch')">提交</button>
@@ -358,10 +286,9 @@
     <div class="idea-list" id="list-lunch"></div>
   </div>
 
-  <!-- 下午留言 -->
-  <div class="card" id="card-afternoon-ideas">
+  <div class="card">
     <div class="card-title">下午</div>
-    <div class="card-desc">看大家状态，决定是否返深。有什么想法可以说说：</div>
+    <div class="card-desc">看大家状态，决定是否返深。有什么想法说说：</div>
     <div class="idea-input-wrap">
       <input type="text" id="input-afternoon" placeholder="比如：去逛逛xxx、早点回..." maxlength="100" onkeydown="if(event.key==='Enter')submitIdea('afternoon')">
       <button class="idea-submit" onclick="submitIdea('afternoon')">提交</button>
@@ -369,7 +296,7 @@
     <div class="idea-list" id="list-afternoon"></div>
   </div>
 
-  <!-- ==================== 酒店推荐 ==================== -->
+  <!-- ==================== 酒店 ==================== -->
   <div class="divider">- - -</div>
 
   <div class="card">
@@ -378,11 +305,7 @@
       <div class="hotel-name">喜悦门酒店</div>
       <div class="hotel-addr">容桂街道容桂大道中73号（近天佑城商圈）</div>
       <div class="hotel-price">约 ¥200 - ¥380 / 晚</div>
-      <div class="hotel-pros">
-        <span class="tag tag-pro">性价比高</span>
-        <span class="tag tag-pro">附近吃的多</span>
-        <span class="tag tag-pro">离我家仅 500m</span>
-      </div>
+      <div class="hotel-pros"><span class="tag tag-pro">性价比高</span><span class="tag tag-pro">附近吃的多</span><span class="tag tag-pro">离我家仅 500m</span></div>
       <div class="hotel-cons">我没住过，无法担保体验</div>
     </div>
     <div class="hotel-card">
@@ -396,190 +319,202 @@
       <div class="hotel-name">喜来登酒店</div>
       <div class="hotel-addr">大良街道德胜中路11号（临德胜河）</div>
       <div class="hotel-price">约 ¥600 - ¥1000 / 晚（周末价）</div>
-      <div class="hotel-pros">
-        <span class="tag tag-pro">环境好</span>
-        <span class="tag tag-pro">条件好</span>
-        <span class="tag tag-pro">五星级万豪系</span>
-      </div>
+      <div class="hotel-pros"><span class="tag tag-pro">环境好</span><span class="tag tag-pro">条件好</span><span class="tag tag-pro">五星级万豪系</span></div>
       <div class="hotel-cons">周末价格偏贵</div>
     </div>
   </div>
 
-  <div class="sync-status" id="sync-status">正在连接同步服务...</div>
+  <div class="sync-status" id="sync-status">正在加载数据...</div>
   <div class="footer">祝大家吃得开心，玩得尽兴</div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Gun.js -->
-<script src="https://cdn.jsdelivr.net/npm/gun@0.2020.1239/gun.min.js"></script>
-
 <script>
+// =====================================================
+// 基于 jsonblob.com 的跨设备实时同步
+// 无需任何账号、无需配置、打开即用
+// 读: GET, 写: PUT
+// =====================================================
+
+var DB_URL = 'https://jsonblob.com/api/jsonBlob/019eb080-4535-75c4-9b4b-491ba4b29ff2';
+
 // ---- User ID ----
 function getUserId() {
-  let id = localStorage.getItem('sd_uid');
+  var id = localStorage.getItem('sd_uid');
   if (!id) {
-    id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
     localStorage.setItem('sd_uid', id);
   }
   return id;
 }
-const uid = getUserId();
+var uid = getUserId();
 
 // ---- Toast ----
-let toastTimer;
+var toastTimer;
 function toast(msg) {
-  const el = document.getElementById('toast');
+  var el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2000);
 }
 
-// ---- Gun.js realtime database ----
-var gun = Gun({
-  peers: [
-    'https://gun-manhattan.herokuapp.com/gun',
-    'https://peer.wallie.io/gun'
-  ]
-});
-
-// ---- Voting System ----
-const TOPICS = ['lunch', 'dinner', 'morning'];
-const TOPIC_OPTIONS = {
-  lunch: ['shengji', 'shaoezai'],
-  dinner: ['xingfu', 'zijixiang'],
-  morning: ['museum', 'harbour']
+// ---- Topics ----
+var TOPICS = ['lunch','dinner','morning'];
+var TOPIC_OPTIONS = {
+  lunch: ['shengji','shaoezai'],
+  dinner: ['xingfu','zijixiang'],
+  morning: ['museum','harbour']
 };
-const TOPIC_LABELS = {
-  lunch: { shengji: '生记饭店', shaoezai: '烧鹅再饭店' },
-  dinner: { xingfu: '相聚幸福大排档', zijixiang: '你们想吃啥我陪着去' },
-  morning: { museum: '和美术馆', harbour: '欢乐港湾' }
+var TOPIC_LABELS = {
+  lunch: { shengji:'生记饭店', shaoezai:'烧鹅再饭店' },
+  dinner: { xingfu:'相聚幸福大排档', zijixiang:'你们想吃啥我陪着去' },
+  morning: { museum:'和美术馆', harbour:'欢乐港湾' }
 };
 
-let myVotes = {}; // { lunch: 'shengji', dinner: null, morning: null }
+var myVotes = {};
+var localData = { votes: {}, ideas: {} };
+var writeLock = false;
+var syncOk = false;
 
-// Listen for vote changes from Gun
-TOPICS.forEach(topic => {
-  gun.get('shunde_trip').get('votes').get(topic).map().on(function(val, key) {
-    if (!val) return; // deleted
-    recalcVoteCounts(topic);
-  });
-});
+// ---- Read from jsonblob ----
+function fetchData() {
+  fetch(DB_URL + '?t=' + Date.now(), { cache: 'no-store' })
+    .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
+    .then(function(data) {
+      localData = data || {};
+      if (!localData.votes) localData.votes = {};
+      if (!localData.ideas) localData.ideas = {};
 
-function recalcVoteCounts(topic) {
-  const counts = {};
-  TOPIC_OPTIONS[topic].forEach(o => counts[o] = 0);
-
-  gun.get('shunde_trip').get('votes').get(topic).map().once(function(val, key) {
-    if (val && val.v) {
-      counts[val.v] = (counts[val.v] || 0) + 1;
-    }
-  }, { wait: 200 });
-
-  // Also check what I voted
-  gun.get('shunde_trip').get('votes').get(topic).get(uid).once(function(val) {
-    if (val && val.v) {
-      myVotes[topic] = val.v;
-    } else {
-      myVotes[topic] = null;
-    }
-    updateMyVoteUI(topic);
-    // Delayed count update after all map entries are read
-    setTimeout(() => {
-      const c = {};
-      TOPIC_OPTIONS[topic].forEach(o => c[o] = 0);
-      gun.get('shunde_trip').get('votes').get(topic).map().once(function(v, k) {
-        if (v && v.v) c[v.v] = (c[v.v] || 0) + 1;
-        // After all loaded, update UI
-        setTimeout(() => updateCounts(topic, c), 300);
+      TOPICS.forEach(function(topic) {
+        var counts = {};
+        TOPIC_OPTIONS[topic].forEach(function(o) { counts[o] = 0; });
+        var topicVotes = localData.votes[topic] || {};
+        for (var k in topicVotes) {
+          var v = topicVotes[k];
+          if (counts[v] !== undefined) counts[v]++;
+        }
+        myVotes[topic] = topicVotes[uid] || null;
+        updateCountsUI(topic, counts);
+        updateMyVoteUI(topic);
       });
-    }, 300);
+
+      renderIdeas('lunch');
+      renderIdeas('afternoon');
+
+      if (!syncOk) {
+        syncOk = true;
+        updateSyncStatus(true);
+      }
+    })
+    .catch(function() {
+      updateSyncStatus(false);
+    });
+}
+
+// ---- Write to jsonblob (with lock to avoid conflicts) ----
+function saveData() {
+  if (writeLock) {
+    // Retry after current write
+    setTimeout(saveData, 500);
+    return;
+  }
+  writeLock = true;
+  fetch(DB_URL, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(localData)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function() {
+    writeLock = false;
+    updateSyncStatus(true);
+    // Re-fetch immediately so writer sees consistent state
+    fetchData();
+  })
+  .catch(function() {
+    writeLock = false;
+    updateSyncStatus(false);
   });
 }
 
-// Initial load
-setTimeout(() => {
-  TOPICS.forEach(t => recalcVoteCounts(t));
-}, 1000);
+// ---- Vote ----
+function handleVote(topic, optionId) {
+  var labels = TOPIC_LABELS[topic];
+  var prev = myVotes[topic];
 
-// ---- Vote Handler ----
-async function handleVote(topic, optionId) {
-  const labels = TOPIC_LABELS[topic];
-  const prev = myVotes[topic];
+  if (!localData.votes[topic]) localData.votes[topic] = {};
 
   if (prev === optionId) {
-    // Cancel vote
-    gun.get('shunde_trip').get('votes').get(topic).get(uid).put(null);
+    delete localData.votes[topic][uid];
     myVotes[topic] = null;
     toast('已取消投票');
   } else {
-    gun.get('shunde_trip').get('votes').get(topic).get(uid).put({ v: optionId, t: Date.now() });
+    localData.votes[topic][uid] = optionId;
     myVotes[topic] = optionId;
-    if (prev) {
-      toast('已改投：' + labels[optionId]);
-    } else {
-      toast('投票成功！');
-    }
+    if (prev) { toast('已改投：' + labels[optionId]); }
+    else { toast('投票成功！'); }
   }
+
   updateMyVoteUI(topic);
-  // Recalc after write
-  setTimeout(() => recalcVoteCounts(topic), 500);
+  recalcUI(topic);
+  saveData();
 }
 
-window.handleVote = handleVote;
+function recalcUI(topic) {
+  var counts = {};
+  TOPIC_OPTIONS[topic].forEach(function(o) { counts[o] = 0; });
+  var tv = localData.votes[topic] || {};
+  for (var k in tv) { var v = tv[k]; if (counts[v] !== undefined) counts[v]++; }
+  updateCountsUI(topic, counts);
+}
 
-// ---- UI Updates for voting ----
-function updateCounts(topic, counts) {
-  for (const [optionId, count] of Object.entries(counts)) {
-    const badge = document.getElementById('count-' + topic + '-' + optionId);
-    if (badge) badge.textContent = count;
+function updateCountsUI(topic, counts) {
+  for (var o in counts) {
+    var b = document.getElementById('count-' + topic + '-' + o);
+    if (b) b.textContent = counts[o];
   }
 }
 
 function updateMyVoteUI(topic) {
-  const current = myVotes[topic];
-  TOPIC_OPTIONS[topic].forEach(optId => {
-    const btn = document.getElementById('btn-' + topic + '-' + optId);
-    if (btn) btn.textContent = '投票';
+  var cur = myVotes[topic];
+  TOPIC_OPTIONS[topic].forEach(function(o) {
+    var b = document.getElementById('btn-' + topic + '-' + o);
+    if (b) b.textContent = '投票';
   });
-  document.querySelectorAll('#vote-' + topic + ' .vote-option').forEach(el => el.classList.remove('voted'));
-  if (current) {
-    const el = document.querySelector('#vote-' + topic + ' .vote-option[data-option="' + current + '"]');
+  var els = document.querySelectorAll('#vote-' + topic + ' .vote-option');
+  for (var i = 0; i < els.length; i++) els[i].classList.remove('voted');
+  if (cur) {
+    var el = document.querySelector('#vote-' + topic + ' .vote-option[data-option="' + cur + '"]');
     if (el) el.classList.add('voted');
-    const btn = document.getElementById('btn-' + topic + '-' + current);
-    if (btn) btn.textContent = '已投票';
+    var b = document.getElementById('btn-' + topic + '-' + cur);
+    if (b) b.textContent = '已投票';
   }
 }
 
-// ===== Idea/Note System with Gun =====
-const IDEA_TOPICS = ['lunch', 'afternoon'];
+window.handleVote = handleVote;
 
+// ---- Ideas ----
 function renderIdeas(topic) {
-  const list = document.getElementById('list-' + topic);
-  const items = [];
-  gun.get('shunde_trip').get('ideas').get(topic).map().once(function(val, key) {
-    if (val && val.text) {
-      items.push({ uid: key, text: val.text, ts: val.t || 0 });
-    }
-    // Render after all loaded (debounce)
-    clearTimeout(window._ideaRenderTimer);
-    window._ideaRenderTimer = setTimeout(() => {
-      items.sort((a, b) => a.ts - b.ts);
-      if (!items.length) {
-        list.innerHTML = '<div class="idea-empty">还没有人留言，来说说你的想法吧</div>';
-        return;
-      }
-      list.innerHTML = items.map((item) => {
-        const isMine = item.uid === uid;
-        return '<div class="idea-item">' +
-          '<span class="idea-text">' + escapeHtml(item.text) + '</span>' +
-          (isMine ? '<span class="idea-del" onclick="deleteIdea(\'' + topic + '\')">×</span>' : '') +
-          '</div>';
-      }).join('');
-    }, 200);
-  });
+  var list = document.getElementById('list-' + topic);
+  var items = [];
+  var ti = (localData.ideas && localData.ideas[topic]) ? localData.ideas[topic] : {};
+  for (var k in ti) {
+    items.push({ uid: k, text: ti[k].text, ts: ti[k].t || 0 });
+  }
+  items.sort(function(a,b) { return a.ts - b.ts; });
+  if (!items.length) {
+    list.innerHTML = '<div class="idea-empty">还没有人留言，来说说你的想法吧</div>';
+    return;
+  }
+  list.innerHTML = items.map(function(item) {
+    var isMine = item.uid === uid;
+    return '<div class="idea-item">' +
+      '<span class="idea-text">' + escapeHtml(item.text) + '</span>' +
+      (isMine ? '<span class="idea-del" onclick="deleteIdea(\'' + topic + '\')">×</span>' : '') +
+      '</div>';
+  }).join('');
 }
 
 function escapeHtml(s) {
@@ -587,68 +522,67 @@ function escapeHtml(s) {
 }
 
 function submitIdea(topic) {
-  const input = document.getElementById('input-' + topic);
-  const text = input.value.trim();
+  var input = document.getElementById('input-' + topic);
+  var text = input.value.trim();
   if (!text) { toast('请输入内容'); return; }
-  gun.get('shunde_trip').get('ideas').get(topic).get(uid).put({ text: text, t: Date.now() });
+
+  if (!localData.ideas) localData.ideas = {};
+  if (!localData.ideas[topic]) localData.ideas[topic] = {};
+  localData.ideas[topic][uid] = { text: text, t: Date.now() };
+
   input.value = '';
   toast('留言成功！');
-  setTimeout(() => renderIdeas(topic), 300);
+  renderIdeas(topic);
+  saveData();
 }
 
 function deleteIdea(topic) {
-  gun.get('shunde_trip').get('ideas').get(topic).get(uid).put(null);
+  if (localData.ideas && localData.ideas[topic]) {
+    delete localData.ideas[topic][uid];
+  }
   toast('已删除');
-  setTimeout(() => renderIdeas(topic), 300);
+  renderIdeas(topic);
+  saveData();
 }
-
-// Listen for idea changes
-IDEA_TOPICS.forEach(topic => {
-  gun.get('shunde_trip').get('ideas').get(topic).map().on(function() {
-    renderIdeas(topic);
-  });
-});
 
 window.submitIdea = submitIdea;
 window.deleteIdea = deleteIdea;
 
-// ---- Sync Status ----
-setTimeout(() => {
-  document.getElementById('sync-status').textContent = '✅ 实时同步已就绪';
-  document.getElementById('sync-status').classList.add('online');
-}, 2000);
+// ---- Sync status ----
+function updateSyncStatus(ok) {
+  var el = document.getElementById('sync-status');
+  if (ok) {
+    el.textContent = '✅ 实时同步已就绪';
+    el.className = 'sync-status online';
+  } else {
+    el.textContent = '⚠ 网络异常，重试中...';
+    el.className = 'sync-status offline';
+  }
+}
+
+// ---- Init ----
+fetchData();
+
+// Poll every 3 seconds
+setInterval(fetchData, 3000);
 
 // ---- Countdown ----
 (function updateCountdown() {
-  const tripDate = new Date(2026, 5, 13);
-  const now = new Date();
-  const diff = tripDate - now;
-  const el = document.getElementById('countdown');
-  if (diff < 0) {
-    el.textContent = '旅途进行中...';
-  } else if (diff < 86400000) {
-    const hours = Math.floor(diff / 3600000);
-    el.textContent = '距离出发还有 ' + hours + ' 小时';
-  } else {
-    const days = Math.ceil(diff / 86400000);
-    el.textContent = '距离出发还有 ' + days + ' 天';
-  }
+  var tripDate = new Date(2026, 5, 13);
+  var diff = tripDate - new Date();
+  var el = document.getElementById('countdown');
+  if (diff < 0) { el.textContent = '旅途进行中...'; }
+  else if (diff < 86400000) { el.textContent = '距离出发还有 ' + Math.floor(diff/3600000) + ' 小时'; }
+  else { el.textContent = '距离出发还有 ' + Math.ceil(diff/86400000) + ' 天'; }
 })();
 
-setInterval(() => {
-  const tripDate = new Date(2026, 5, 13);
-  const now = new Date();
-  const diff = tripDate - now;
-  const el = document.getElementById('countdown');
-  if (diff < 0) {
-    el.textContent = '旅途进行中...';
-  } else if (diff < 86400000) {
-    const hours = Math.floor(diff / 3600000);
-    el.textContent = '距离出发还有 ' + hours + ' 小时';
-  } else {
-    const days = Math.ceil(diff / 86400000);
-    el.textContent = '距离出发还有 ' + days + ' 天';
-  }
+setInterval(function() {
+  var tripDate = new Date(2026, 5, 13);
+  var diff = tripDate - new Date();
+  var el = document.getElementById('countdown');
+  if (diff < 0) { el.textContent = '旅途进行中...'; }
+  else if (diff < 86400000) { el.textContent = '距离出发还有 ' + Math.floor(diff/3600000) + ' 小时'; }
+  else { el.textContent = '距离出发还有 ' + Math.ceil(diff/86400000) + ' 天'; }
 }, 60000);
 </script>
 
