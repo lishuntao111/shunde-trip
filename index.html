@@ -355,43 +355,27 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// =====================================================
-// 基于 GitHub Contents API 的跨设备实时同步
-// api.github.com 支持 CORS *，公开仓库读取无需认证
-// 数据存在仓库 data.json 中
-// =====================================================
-
+// GitHub Contents API cross-device sync
 var GH_TOKEN = "ghp_" + "9OVmIcZcSf6lIeIWrjdkNtxmr3bM0W3ptSbv";
 var GH_API = 'https://api.github.com/repos/lishuntao111/shunde-trip/contents/data.json';
 
-// ---- User ID ----
 function getUserId() {
   var id = localStorage.getItem('sd_uid');
-  if (!id) {
-    id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
-    localStorage.setItem('sd_uid', id);
-  }
+  if (!id) { id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); localStorage.setItem('sd_uid', id); }
   return id;
 }
 var uid = getUserId();
 
-// ---- Toast ----
 var toastTimer;
 function toast(msg) {
   var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2000);
 }
 
-// ---- Topics ----
 var TOPICS = ['lunch','dinner','morning'];
-var TOPIC_OPTIONS = {
-  lunch: ['shengji','shaoezai'],
-  dinner: ['xingfu','zijixiang'],
-  morning: ['museum','harbour']
-};
+var TOPIC_OPTIONS = { lunch: ['shengji','shaoezai'], dinner: ['xingfu','zijixiang'], morning: ['museum','harbour'] };
 var TOPIC_LABELS = {
   lunch: { shengji:'生记饭店', shaoezai:'烧鹅再饭店' },
   dinner: { xingfu:'相聚幸福大排档', zijixiang:'你们想吃啥我陪着去' },
@@ -400,63 +384,48 @@ var TOPIC_LABELS = {
 
 var myVotes = {};
 var localData = { votes: {}, ideas: {} };
-var writeLock = false;
+var saveTimer = null;
 
-// ---- Read from GitHub (no auth needed for public repos) ----
-function fetchData(fromWrite) {
+// Load data from GitHub (public repo = no auth needed for read)
+function fetchData() {
   fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store' })
-    .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
+    .then(function(r) { return r.json(); })
     .then(function(info) {
-      // GitHub Contents API returns content as base64
-      var json = decodeURIComponent(escape(atob(info.content)));
-      var remote = JSON.parse(json);
-      if (!remote || typeof remote !== 'object') return;
+      var remote = JSON.parse(decodeURIComponent(escape(atob(info.content))));
       if (!remote.votes) remote.votes = {};
       if (!remote.ideas) remote.ideas = {};
-
-      if (fromWrite) {
-        localData.votes = remote.votes;
-        localData.ideas = remote.ideas;
-      } else {
-        var local = loadLocalBackup();
-        localData.votes = deepMerge(remote.votes, local.votes);
-        localData.ideas = deepMerge(remote.ideas, local.ideas);
-      }
+      // Merge: remote is truth from server, overlay keeps newer local entries
+      localData = deepMerge(remote, localData);
       localStorage.setItem('sd_local_data', JSON.stringify(localData));
       renderAll();
       updateSyncStatus(true);
     })
-    .catch(function() {
-      updateSyncStatus(false);
-    });
+    .catch(function() { updateSyncStatus(false); });
 }
 
+// Recursive deep merge that handles votes.lunch.userId = option
 function deepMerge(base, overlay) {
-  var result = {};
-  for (var k in base) { result[k] = base[k]; }
-  for (var k in overlay) { result[k] = overlay[k]; }
+  var result = {}, key;
+  for (key in base) { result[key] = base[key]; }
+  for (key in overlay) {
+    var ov = overlay[key], bv = base[key];
+    if (ov && typeof ov === 'object' && !Array.isArray(ov) &&
+        bv && typeof bv === 'object' && !Array.isArray(bv)) {
+      result[key] = deepMerge(bv, ov);
+    } else {
+      result[key] = ov;
+    }
+  }
   return result;
-}
-
-function loadLocalBackup() {
-  try {
-    var d = JSON.parse(localStorage.getItem('sd_local_data') || '{}');
-    if (!d.votes) d.votes = {};
-    if (!d.ideas) d.ideas = {};
-    return d;
-  } catch(e) { return { votes: {}, ideas: {} }; }
 }
 
 function renderAll() {
   TOPICS.forEach(function(topic) {
     var counts = {};
     TOPIC_OPTIONS[topic].forEach(function(o) { counts[o] = 0; });
-    var topicVotes = localData.votes[topic] || {};
-    for (var k in topicVotes) {
-      var v = topicVotes[k];
-      if (counts[v] !== undefined) counts[v]++;
-    }
-    myVotes[topic] = topicVotes[uid] || null;
+    var tv = localData.votes[topic] || {};
+    for (var k in tv) { var v = tv[k]; if (counts[v] !== undefined) counts[v]++; }
+    myVotes[topic] = tv[uid] || null;
     updateCountsUI(topic, counts);
     updateMyVoteUI(topic);
   });
@@ -464,52 +433,49 @@ function renderAll() {
   renderIdeas('afternoon');
 }
 
-// ---- Write to GitHub (needs token + sha) ----
+// Save: read latest from GitHub, merge local changes in, write back
 function saveData() {
   localStorage.setItem('sd_local_data', JSON.stringify(localData));
-  if (writeLock) { setTimeout(saveData, 500); return; }
-  writeLock = true;
-
-  // First get current sha
-  fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store' })
-    .then(function(r) { return r.json(); })
-    .then(function(info) {
-      var body = JSON.stringify({
-        message: 'data update',
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(localData)))),
-        sha: info.sha
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(function() {
+    saveTimer = null;
+    // Step 1: read current remote data
+    fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(info) {
+        var remote = JSON.parse(decodeURIComponent(escape(atob(info.content))));
+        if (!remote.votes) remote.votes = {};
+        if (!remote.ideas) remote.ideas = {};
+        // Step 2: merge our local changes ON TOP of latest remote
+        var merged = deepMerge(remote, localData);
+        delete merged._id;
+        // Step 3: write merged data back
+        return fetch(GH_API, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'token ' + GH_TOKEN },
+          body: JSON.stringify({
+            message: 'data update',
+            content: btoa(unescape(encodeURIComponent(JSON.stringify(merged)))),
+            sha: info.sha
+          })
+        });
+      })
+      .then(function(r) {
+        if (!r.ok) throw new Error('write failed: ' + r.status);
+        updateSyncStatus(true);
+        fetchData();
+      })
+      .catch(function(err) {
+        console.error('Save error:', err);
+        updateSyncStatus(false);
+        saveData(); // retry
       });
-      return fetch(GH_API, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'token ' + GH_TOKEN
-        },
-        body: body
-      });
-    })
-    .then(function(r) {
-      if (!r.ok) throw new Error('write failed: ' + r.status);
-      writeLock = false;
-      updateSyncStatus(true);
-      fetchData(true);
-    })
-    .catch(function(err) {
-      writeLock = false;
-      console.error('Save error:', err);
-      updateSyncStatus(false);
-      // Retry after delay in case of race
-      setTimeout(function() { saveData(); }, 2000);
-    });
+  }, 300);
 }
 
-// ---- Vote ----
 function handleVote(topic, optionId) {
-  var labels = TOPIC_LABELS[topic];
-  var prev = myVotes[topic];
-
   if (!localData.votes[topic]) localData.votes[topic] = {};
-
+  var prev = myVotes[topic];
   if (prev === optionId) {
     delete localData.votes[topic][uid];
     myVotes[topic] = null;
@@ -517,10 +483,9 @@ function handleVote(topic, optionId) {
   } else {
     localData.votes[topic][uid] = optionId;
     myVotes[topic] = optionId;
-    if (prev) { toast('已改投：' + labels[optionId]); }
+    if (prev) { toast('已改投：' + TOPIC_LABELS[topic][optionId]); }
     else { toast('投票成功！'); }
   }
-
   updateMyVoteUI(topic);
   recalcUI(topic);
   saveData();
@@ -535,18 +500,12 @@ function recalcUI(topic) {
 }
 
 function updateCountsUI(topic, counts) {
-  for (var o in counts) {
-    var b = document.getElementById('count-' + topic + '-' + o);
-    if (b) b.textContent = counts[o];
-  }
+  for (var o in counts) { var b = document.getElementById('count-' + topic + '-' + o); if (b) b.textContent = counts[o]; }
 }
 
 function updateMyVoteUI(topic) {
   var cur = myVotes[topic];
-  TOPIC_OPTIONS[topic].forEach(function(o) {
-    var b = document.getElementById('btn-' + topic + '-' + o);
-    if (b) b.textContent = '投票';
-  });
+  TOPIC_OPTIONS[topic].forEach(function(o) { var b = document.getElementById('btn-' + topic + '-' + o); if (b) b.textContent = '投票'; });
   var els = document.querySelectorAll('#vote-' + topic + ' .vote-option');
   for (var i = 0; i < els.length; i++) els[i].classList.remove('voted');
   if (cur) {
@@ -559,41 +518,27 @@ function updateMyVoteUI(topic) {
 
 window.handleVote = handleVote;
 
-// ---- Ideas ----
 function renderIdeas(topic) {
-  var list = document.getElementById('list-' + topic);
-  var items = [];
+  var list = document.getElementById('list-' + topic), items = [];
   var ti = (localData.ideas && localData.ideas[topic]) ? localData.ideas[topic] : {};
-  for (var k in ti) {
-    items.push({ uid: k, text: ti[k].text, ts: ti[k].t || 0 });
-  }
+  for (var k in ti) items.push({ uid: k, text: ti[k].text, ts: ti[k].t || 0 });
   items.sort(function(a,b) { return a.ts - b.ts; });
-  if (!items.length) {
-    list.innerHTML = '<div class="idea-empty">还没有人留言，来说说你的想法吧</div>';
-    return;
-  }
+  if (!items.length) { list.innerHTML = '<div class="idea-empty">还没有人留言，来说说你的想法吧</div>'; return; }
   list.innerHTML = items.map(function(item) {
     var isMine = item.uid === uid;
-    return '<div class="idea-item">' +
-      '<span class="idea-text">' + escapeHtml(item.text) + '</span>' +
-      (isMine ? '<span class="idea-del" onclick="deleteIdea(\'' + topic + '\')">x</span>' : '') +
-      '</div>';
+    return '<div class="idea-item"><span class="idea-text">' + escapeHtml(item.text) + '</span>' + (isMine ? '<span class="idea-del" onclick="deleteIdea(\'' + topic + '\')">x</span>' : '') + '</div>';
   }).join('');
 }
 
-function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function submitIdea(topic) {
   var input = document.getElementById('input-' + topic);
   var text = input.value.trim();
   if (!text) { toast('请输入内容'); return; }
-
   if (!localData.ideas) localData.ideas = {};
   if (!localData.ideas[topic]) localData.ideas[topic] = {};
   localData.ideas[topic][uid] = { text: text, t: Date.now() };
-
   input.value = '';
   toast('留言成功！');
   renderIdeas(topic);
@@ -601,9 +546,7 @@ function submitIdea(topic) {
 }
 
 function deleteIdea(topic) {
-  if (localData.ideas && localData.ideas[topic]) {
-    delete localData.ideas[topic][uid];
-  }
+  if (localData.ideas && localData.ideas[topic]) delete localData.ideas[topic][uid];
   toast('已删除');
   renderIdeas(topic);
   saveData();
@@ -612,45 +555,33 @@ function deleteIdea(topic) {
 window.submitIdea = submitIdea;
 window.deleteIdea = deleteIdea;
 
-// ---- Sync status ----
 function updateSyncStatus(ok) {
   var el = document.getElementById('sync-status');
-  if (ok) {
-    el.textContent = '✅ 实时同步已就绪';
-    el.className = 'sync-status online';
-  } else {
-    el.textContent = '⚠ 网络异常，数据已存本地，恢复后自动同步';
-    el.className = 'sync-status offline';
-  }
+  if (ok) { el.textContent = '实时同步已就绪'; el.className = 'sync-status online'; }
+  else { el.textContent = '网络异常，数据已存本地，恢复后自动同步'; el.className = 'sync-status offline'; }
 }
 
-// ---- Init ----
-localData = loadLocalBackup();
-if (!localData.votes) localData.votes = {};
-if (!localData.ideas) localData.ideas = {};
+// Init
+localData = (function() {
+  try { var d = JSON.parse(localStorage.getItem('sd_local_data') || '{}'); if (!d.votes) d.votes = {}; if (!d.ideas) d.ideas = {}; return d; }
+  catch(e) { return { votes: {}, ideas: {} }; }
+})();
 renderAll();
 fetchData();
+setInterval(fetchData, 4000);
 
-setInterval(function() { fetchData(); }, 4000);
-
-// ---- Countdown ----
-(function updateCountdown() {
-  var tripDate = new Date(2026, 5, 13);
-  var diff = tripDate - new Date();
-  var el = document.getElementById('countdown');
-  if (diff < 0) { el.textContent = '旅途进行中...'; }
-  else if (diff < 86400000) { el.textContent = '距离出发还有 ' + Math.floor(diff/3600000) + ' 小时'; }
-  else { el.textContent = '距离出发还有 ' + Math.ceil(diff/86400000) + ' 天'; }
+// Countdown
+(function() {
+  var cd = setInterval(function() {
+    var diff = new Date(2026, 5, 13) - new Date();
+    var el = document.getElementById('countdown');
+    if (!el) return;
+    if (diff < 0) el.textContent = '旅途进行中...';
+    else if (diff < 86400000) el.textContent = '距离出发还有 ' + Math.floor(diff/3600000) + ' 小时';
+    else el.textContent = '距离出发还有 ' + Math.ceil(diff/86400000) + ' 天';
+  }, 60000);
+  cd();
 })();
-
-setInterval(function() {
-  var tripDate = new Date(2026, 5, 13);
-  var diff = tripDate - new Date();
-  var el = document.getElementById('countdown');
-  if (diff < 0) { el.textContent = '旅途进行中...'; }
-  else if (diff < 86400000) { el.textContent = '距离出发还有 ' + Math.floor(diff/3600000) + ' 小时'; }
-  else { el.textContent = '距离出发还有 ' + Math.ceil(diff/86400000) + ' 天'; }
-}, 60000);
 </script>
 
 </body>
