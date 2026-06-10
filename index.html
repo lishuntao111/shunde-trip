@@ -385,17 +385,18 @@ var TOPIC_LABELS = {
 var myVotes = {};
 var localData = { votes: {}, ideas: {} };
 var saveTimer = null;
+var dirty = false;
 
 // Load data from GitHub (token required to avoid 60/hr anonymous rate limit)
 function fetchData() {
+  if (dirty) return; // skip while local has unsaved changes
   fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store', headers: { 'Authorization': 'token ' + GH_TOKEN } })
     .then(function(r) { return r.json(); })
     .then(function(info) {
       var remote = JSON.parse(decodeURIComponent(escape(atob(info.content))));
       if (!remote.votes) remote.votes = {};
       if (!remote.ideas) remote.ideas = {};
-      // Merge: remote is truth from server, overlay keeps newer local entries
-      localData = deepMerge(remote, localData);
+      localData = remote;
       localStorage.setItem('sd_local_data', JSON.stringify(localData));
       renderAll();
       updateSyncStatus(true);
@@ -403,19 +404,24 @@ function fetchData() {
     .catch(function() { updateSyncStatus(false); });
 }
 
-// Recursive deep merge that handles votes.lunch.userId = option
-function deepMerge(base, overlay) {
-  var result = {}, key;
-  for (key in base) { result[key] = base[key]; }
-  for (key in overlay) {
-    var ov = overlay[key], bv = base[key];
-    if (ov && typeof ov === 'object' && !Array.isArray(ov) &&
-        bv && typeof bv === 'object' && !Array.isArray(bv)) {
-      result[key] = deepMerge(bv, ov);
-    } else {
-      result[key] = ov;
+// Merge: remote is authoritative for everyone except my own uid.
+// For my uid: local wins (preserves pending changes); local null = tombstone (cancel/delete).
+function mergeMine(remote, local, myUid) {
+  var result = { votes: {}, ideas: {} };
+  ['votes','ideas'].forEach(function(sec) {
+    var rs = (remote && remote[sec]) || {};
+    for (var top in rs) {
+      result[sec][top] = {};
+      for (var u in rs[top]) result[sec][top][u] = rs[top][u];
     }
-  }
+    var ls = (local && local[sec]) || {};
+    for (var top in ls) {
+      if (!ls[top] || !(myUid in ls[top])) continue;
+      if (!result[sec][top]) result[sec][top] = {};
+      if (ls[top][myUid] === null) delete result[sec][top][myUid];
+      else result[sec][top][myUid] = ls[top][myUid];
+    }
+  });
   return result;
 }
 
@@ -433,8 +439,9 @@ function renderAll() {
   renderIdeas('afternoon');
 }
 
-// Save: read latest from GitHub, merge local changes in, write back
+// Save: read latest from GitHub, apply only my uid's changes on top, write back
 function saveData() {
+  dirty = true;
   localStorage.setItem('sd_local_data', JSON.stringify(localData));
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(function() {
@@ -444,11 +451,8 @@ function saveData() {
       .then(function(r) { return r.json(); })
       .then(function(info) {
         var remote = JSON.parse(decodeURIComponent(escape(atob(info.content))));
-        if (!remote.votes) remote.votes = {};
-        if (!remote.ideas) remote.ideas = {};
-        // Step 2: merge our local changes ON TOP of latest remote
-        var merged = deepMerge(remote, localData);
-        delete merged._id;
+        // Step 2: take remote as truth, apply only MY uid's changes (incl. tombstones)
+        var merged = mergeMine(remote, localData, uid);
         // Step 3: write merged data back
         return fetch(GH_API, {
           method: 'PUT',
@@ -462,13 +466,14 @@ function saveData() {
       })
       .then(function(r) {
         if (!r.ok) throw new Error('write failed: ' + r.status);
+        dirty = false;
         updateSyncStatus(true);
         fetchData();
       })
       .catch(function(err) {
         console.error('Save error:', err);
         updateSyncStatus(false);
-        saveData(); // retry
+        setTimeout(saveData, 2000); // retry with backoff; dirty stays true
       });
   }, 300);
 }
@@ -477,7 +482,7 @@ function handleVote(topic, optionId) {
   if (!localData.votes[topic]) localData.votes[topic] = {};
   var prev = myVotes[topic];
   if (prev === optionId) {
-    delete localData.votes[topic][uid];
+    localData.votes[topic][uid] = null;
     myVotes[topic] = null;
     toast('已取消投票');
   } else {
@@ -521,7 +526,7 @@ window.handleVote = handleVote;
 function renderIdeas(topic) {
   var list = document.getElementById('list-' + topic), items = [];
   var ti = (localData.ideas && localData.ideas[topic]) ? localData.ideas[topic] : {};
-  for (var k in ti) items.push({ uid: k, text: ti[k].text, ts: ti[k].t || 0 });
+  for (var k in ti) { if (ti[k] === null) continue; items.push({ uid: k, text: ti[k].text, ts: ti[k].t || 0 }); }
   items.sort(function(a,b) { return a.ts - b.ts; });
   if (!items.length) { list.innerHTML = '<div class="idea-empty">还没有人留言，来说说你的想法吧</div>'; return; }
   list.innerHTML = items.map(function(item) {
@@ -546,7 +551,7 @@ function submitIdea(topic) {
 }
 
 function deleteIdea(topic) {
-  if (localData.ideas && localData.ideas[topic]) delete localData.ideas[topic][uid];
+  if (localData.ideas && localData.ideas[topic]) localData.ideas[topic][uid] = null;
   toast('已删除');
   renderIdeas(topic);
   saveData();
