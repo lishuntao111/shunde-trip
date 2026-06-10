@@ -362,7 +362,9 @@
 
 var DB_URL = 'https://crudcrud.com/api/092d00eb4f5744c8917d03885fb1430b/shunde-data';
 var DOC_ID_KEY = 'sd_doc_id';
-var DOC_ID = localStorage.getItem(DOC_ID_KEY);
+// Everyone shares ONE document — discovered on first load
+var DOC_ID = localStorage.getItem(DOC_ID_KEY) || null;
+var sharedDocReady = false;
 
 // ---- User ID ----
 function getUserId() {
@@ -408,13 +410,7 @@ var writeLock = false;
 
 // ---- Read from crudcrud ----
 function fetchData() {
-  if (!DOC_ID) {
-    // First time: no doc yet, just use empty data
-    loadLocalBackup();
-    renderAll();
-    return;
-  }
-
+  if (!sharedDocReady) return;
   fetch(DB_URL + '/' + DOC_ID + '?t=' + Date.now(), { cache: 'no-store' })
     .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
     .then(function(remote) {
@@ -476,27 +472,19 @@ function renderAll() {
 // ---- Write to crudcrud ----
 function saveData() {
   localStorage.setItem('sd_local_data', JSON.stringify(localData));
+  if (!sharedDocReady) return;
 
   if (writeLock) { setTimeout(saveData, 500); return; }
   writeLock = true;
 
-  var url = DOC_ID ? DB_URL + '/' + DOC_ID : DB_URL;
-
-  fetch(url, {
-    method: DOC_ID ? 'PUT' : 'POST',
+  fetch(DB_URL + '/' + DOC_ID, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(localData)
   })
   .then(function(r) {
     if (!r.ok) throw new Error('write failed: ' + r.status);
-    return r.json();
-  })
-  .then(function(result) {
     writeLock = false;
-    if (!DOC_ID && result._id) {
-      DOC_ID = result._id;
-      localStorage.setItem(DOC_ID_KEY, DOC_ID);
-    }
     updateSyncStatus(true);
   })
   .catch(function(err) {
@@ -506,7 +494,42 @@ function saveData() {
   });
 }
 
-// ---- Vote ----
+// ---- Shared document discovery ----
+	function initSharedDoc() {
+	  fetch(DB_URL + '?t=' + Date.now(), { cache: 'no-store' })
+	    .then(function(r) { return r.json(); })
+	    .then(function(docs) {
+	      if (Array.isArray(docs) && docs.length > 0) {
+	        DOC_ID = docs[0]._id;
+	        localStorage.setItem(DOC_ID_KEY, DOC_ID);
+	        sharedDocReady = true;
+	        fetchData();
+	      } else {
+	        fetch(DB_URL, {
+	          method: 'POST',
+	          headers: { 'Content-Type': 'application/json' },
+	          body: JSON.stringify({ votes: {}, ideas: {} })
+	        })
+	        .then(function(r) { return r.json(); })
+	        .then(function(doc) {
+	          DOC_ID = doc._id;
+	          localStorage.setItem(DOC_ID_KEY, DOC_ID);
+	          sharedDocReady = true;
+	          fetchData();
+	        })
+	        .catch(function() {
+	          updateSyncStatus(false);
+	        });
+	      }
+	    })
+	    .catch(function() {
+	      localData = loadLocalBackup();
+	      renderAll();
+	      updateSyncStatus(false);
+	    });
+	}
+
+	// ---- Vote ----
 function handleVote(topic, optionId) {
   var labels = TOPIC_LABELS[topic];
   var prev = myVotes[topic];
@@ -632,7 +655,7 @@ localData = loadLocalBackup();
 if (!localData.votes) localData.votes = {};
 if (!localData.ideas) localData.ideas = {};
 renderAll();
-fetchData();
+initSharedDoc();
 
 setInterval(fetchData, 4000);
 
