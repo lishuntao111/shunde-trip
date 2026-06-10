@@ -414,63 +414,92 @@ var myVotes = {};
 var localData = { votes: {}, ideas: {} };
 var writeLock = false;
 
+// ---- Merge: remote data wins for existing keys, local fills gaps ----
+function deepMerge(base, overlay) {
+  var result = {};
+  for (var k in base) result[k] = base[k];
+  for (var k in overlay) {
+    if (overlay[k] && typeof overlay[k] === 'object' && !Array.isArray(overlay[k])) {
+      result[k] = deepMerge(result[k] || {}, overlay[k]);
+    } else {
+      result[k] = overlay[k];
+    }
+  }
+  return result;
+}
+
+function loadLocalBackup() {
+  try { return JSON.parse(localStorage.getItem('sd_local_data') || '{}'); }
+  catch(e) { return {}; }
+}
+
 // ---- Read from GitHub raw (no auth needed) ----
 function fetchData() {
   fetch(RAW_URL + '?t=' + Date.now(), { cache: 'no-store' })
     .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
-    .then(function(data) {
-      localData = data || {};
+    .then(function(remote) {
+      var local = loadLocalBackup();
+      // Merge: remote gets priority, but local fills in gaps (CDN may be stale)
+      localData = deepMerge(local, remote || {});
       if (!localData.votes) localData.votes = {};
       if (!localData.ideas) localData.ideas = {};
 
-      TOPICS.forEach(function(topic) {
-        var counts = {};
-        TOPIC_OPTIONS[topic].forEach(function(o) { counts[o] = 0; });
-        var topicVotes = localData.votes[topic] || {};
-        for (var k in topicVotes) {
-          var v = topicVotes[k];
-          if (counts[v] !== undefined) counts[v]++;
-        }
-        myVotes[topic] = topicVotes[uid] || null;
-        updateCountsUI(topic, counts);
-        updateMyVoteUI(topic);
-      });
-
-      renderIdeas('lunch');
-      renderIdeas('afternoon');
+      renderAll();
       updateSyncStatus(true);
     })
     .catch(function() {
+      // GitHub unreachable, use local data
+      localData = loadLocalBackup();
+      if (!localData.votes) localData.votes = {};
+      if (!localData.ideas) localData.ideas = {};
+      renderAll();
       updateSyncStatus(false);
     });
 }
 
+function renderAll() {
+  TOPICS.forEach(function(topic) {
+    var counts = {};
+    TOPIC_OPTIONS[topic].forEach(function(o) { counts[o] = 0; });
+    var topicVotes = localData.votes[topic] || {};
+    for (var k in topicVotes) {
+      var v = topicVotes[k];
+      if (counts[v] !== undefined) counts[v]++;
+    }
+    myVotes[topic] = topicVotes[uid] || null;
+    updateCountsUI(topic, counts);
+    updateMyVoteUI(topic);
+  });
+  renderIdeas('lunch');
+  renderIdeas('afternoon');
+}
+
 // ---- Write to GitHub ----
 function saveData() {
+  // Always persist locally first
+  localStorage.setItem('sd_local_data', JSON.stringify(localData));
+
   var token = getToken();
   if (!token) {
-    // Fallback to localStorage
-    writeLocal();
-    toast('未配置 token，数据仅保存在本地。请粘贴 GitHub token 以启用跨设备同步。');
+    toast('未配置 token，数据仅保存在本地。');
     return;
   }
 
   if (writeLock) { setTimeout(saveData, 500); return; }
   writeLock = true;
 
-  // Get current sha first
+  // Get current sha then write
   fetch(API_URL + '?t=' + Date.now(), {
     headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
   })
   .then(function(r) { return r.json(); })
   .then(function(info) {
+    if (!info.sha) throw new Error('no sha: ' + (info.message || 'unknown'));
     var content = JSON.stringify(localData, null, 2);
-    var body = {
-      message: 'update trip data',
-      content: btoa(unescape(encodeURIComponent(content)))
-    };
-    if (info.sha) body.sha = info.sha;
-
+    var bytes = new TextEncoder().encode(content);
+    var binary = '';
+    for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    var b64 = btoa(binary);
     return fetch(API_URL, {
       method: 'PUT',
       headers: {
@@ -478,7 +507,7 @@ function saveData() {
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ message: 'update trip data', content: b64, sha: info.sha })
     });
   })
   .then(function(r) { return r.json(); })
@@ -487,29 +516,15 @@ function saveData() {
     if (result.content) {
       updateSyncStatus(true);
     } else if (result.message) {
-      console.error('GitHub error:', result.message);
+      console.error('GitHub write error:', result.message);
       updateSyncStatus(false);
-      // Fallback to local
-      writeLocal();
     }
   })
   .catch(function(err) {
     writeLock = false;
+    console.error('Save error:', err);
     updateSyncStatus(false);
-    writeLocal();
   });
-}
-
-// Local fallback
-function writeLocal() {
-  localStorage.setItem('sd_local_data', JSON.stringify(localData));
-}
-
-function readLocal() {
-  try {
-    var d = JSON.parse(localStorage.getItem('sd_local_data') || '{}');
-    return d;
-  } catch(e) { return {}; }
 }
 
 // ---- Vote ----
@@ -643,7 +658,11 @@ document.getElementById('sync-status').addEventListener('click', function() {
   }
 });
 
-// ---- Init ----
+// ---- Init: show local data immediately, then sync ----
+localData = loadLocalBackup();
+if (!localData.votes) localData.votes = {};
+if (!localData.ideas) localData.ideas = {};
+renderAll();
 fetchData();
 
 // Poll every 4 seconds
