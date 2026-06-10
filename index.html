@@ -153,6 +153,30 @@
   .sync-status { text-align:center; font-size:11px; margin-top:16px; }
   .sync-status.online { color:#27ae60; }
   .sync-status.offline { color:#e67e22; }
+
+  /* Token modal */
+  .token-overlay {
+    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,.5); z-index:1000;
+    justify-content:center; align-items:center; padding:20px;
+  }
+  .token-overlay.show { display:flex; }
+  .token-box {
+    background:#fff; border-radius:16px; padding:24px; max-width:400px; width:100%;
+    box-shadow:0 8px 40px rgba(0,0,0,.2);
+  }
+  .token-box h3 { font-size:18px; margin-bottom:8px; }
+  .token-box p { font-size:13px; color:var(--sub); margin-bottom:12px; line-height:1.6; }
+  .token-box input {
+    width:100%; padding:12px; border:1.5px solid var(--border); border-radius:8px;
+    font-size:14px; outline:none; margin-bottom:12px;
+  }
+  .token-box input:focus { border-color:var(--gold); }
+  .token-box button {
+    width:100%; padding:12px; background:var(--gold); color:#fff;
+    border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;
+  }
+  .token-box .hint { font-size:11px; color:var(--sub); margin-top:8px; text-align:center; }
 </style>
 </head>
 <body>
@@ -197,7 +221,7 @@
         <div class="vote-right"><div class="vote-badge" id="count-lunch-shaoezai">0</div><div class="vote-btn" id="btn-lunch-shaoezai">投票</div></div>
       </div>
     </div>
-    <div class="vote-note">点击投票，可随时修改。所有人实时可见（3秒轮询）。</div>
+    <div class="vote-note">点击投票，可随时修改。所有人实时可见。</div>
   </div>
 
   <div class="vote-section">
@@ -221,7 +245,7 @@
         <div class="vote-right"><div class="vote-badge" id="count-dinner-zijixiang">0</div><div class="vote-btn" id="btn-dinner-zijixiang">投票</div></div>
       </div>
     </div>
-    <div class="vote-note">点击投票，可随时修改。所有人实时可见（3秒轮询）。</div>
+    <div class="vote-note">点击投票，可随时修改。所有人实时可见。</div>
   </div>
 
   <div class="card">
@@ -273,7 +297,7 @@
         <div class="vote-right"><div class="vote-badge" id="count-morning-harbour">0</div><div class="vote-btn" id="btn-morning-harbour">投票</div></div>
       </div>
     </div>
-    <div class="vote-note">点击投票，可随时修改。所有人实时可见（3秒轮询）。</div>
+    <div class="vote-note">点击投票，可随时修改。所有人实时可见。</div>
   </div>
 
   <div class="card">
@@ -332,12 +356,17 @@
 
 <script>
 // =====================================================
-// 基于 jsonblob.com 的跨设备实时同步
-// 无需任何账号、无需配置、打开即用
-// 读: GET, 写: PUT
+// GitHub data.json 作为数据库，跨设备实时同步
+// Token 存入 localStorage，只在写入时需要
+// 读取走 raw.githubusercontent.com（无需认证）
 // =====================================================
 
-var DB_URL = 'https://jsonblob.com/api/jsonBlob/019eb080-4535-75c4-9b4b-491ba4b29ff2';
+var GH_TOKEN_KEY = 'sd_gh_pat';
+var GH_OWNER = 'lishuntao111';
+var GH_REPO = 'shunde-trip';
+var DATA_FILE = 'data.json';
+var RAW_URL = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/main/' + DATA_FILE;
+var API_URL = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + DATA_FILE;
 
 // ---- User ID ----
 function getUserId() {
@@ -360,6 +389,11 @@ function toast(msg) {
   toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2000);
 }
 
+// ---- Token ----
+function getToken() {
+  return localStorage.getItem(GH_TOKEN_KEY);
+}
+
 // ---- Topics ----
 var TOPICS = ['lunch','dinner','morning'];
 var TOPIC_OPTIONS = {
@@ -376,11 +410,10 @@ var TOPIC_LABELS = {
 var myVotes = {};
 var localData = { votes: {}, ideas: {} };
 var writeLock = false;
-var syncOk = false;
 
-// ---- Read from jsonblob ----
+// ---- Read from GitHub raw (no auth needed) ----
 function fetchData() {
-  fetch(DB_URL + '?t=' + Date.now(), { cache: 'no-store' })
+  fetch(RAW_URL + '?t=' + Date.now(), { cache: 'no-store' })
     .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
     .then(function(data) {
       localData = data || {};
@@ -402,41 +435,78 @@ function fetchData() {
 
       renderIdeas('lunch');
       renderIdeas('afternoon');
-
-      if (!syncOk) {
-        syncOk = true;
-        updateSyncStatus(true);
-      }
+      updateSyncStatus(true);
     })
     .catch(function() {
       updateSyncStatus(false);
     });
 }
 
-// ---- Write to jsonblob (with lock to avoid conflicts) ----
+// ---- Write to GitHub ----
 function saveData() {
-  if (writeLock) {
-    // Retry after current write
-    setTimeout(saveData, 500);
+  var token = getToken();
+  if (!token) {
+    // Fallback to localStorage
+    writeLocal();
+    toast('未配置 token，数据仅保存在本地。请粘贴 GitHub token 以启用跨设备同步。');
     return;
   }
+
+  if (writeLock) { setTimeout(saveData, 500); return; }
   writeLock = true;
-  fetch(DB_URL, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(localData)
+
+  // Get current sha first
+  fetch(API_URL + '?t=' + Date.now(), {
+    headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
   })
   .then(function(r) { return r.json(); })
-  .then(function() {
-    writeLock = false;
-    updateSyncStatus(true);
-    // Re-fetch immediately so writer sees consistent state
-    fetchData();
+  .then(function(info) {
+    var content = JSON.stringify(localData, null, 2);
+    var body = {
+      message: 'update trip data',
+      content: btoa(unescape(encodeURIComponent(content)))
+    };
+    if (info.sha) body.sha = info.sha;
+
+    return fetch(API_URL, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + token,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
   })
-  .catch(function() {
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    writeLock = false;
+    if (result.content) {
+      updateSyncStatus(true);
+    } else if (result.message) {
+      console.error('GitHub error:', result.message);
+      updateSyncStatus(false);
+      // Fallback to local
+      writeLocal();
+    }
+  })
+  .catch(function(err) {
     writeLock = false;
     updateSyncStatus(false);
+    writeLocal();
   });
+}
+
+// Local fallback
+function writeLocal() {
+  localStorage.setItem('sd_local_data', JSON.stringify(localData));
+}
+
+function readLocal() {
+  try {
+    var d = JSON.parse(localStorage.getItem('sd_local_data') || '{}');
+    return d;
+  } catch(e) { return {}; }
 }
 
 // ---- Vote ----
@@ -512,7 +582,7 @@ function renderIdeas(topic) {
     var isMine = item.uid === uid;
     return '<div class="idea-item">' +
       '<span class="idea-text">' + escapeHtml(item.text) + '</span>' +
-      (isMine ? '<span class="idea-del" onclick="deleteIdea(\'' + topic + '\')">×</span>' : '') +
+      (isMine ? '<span class="idea-del" onclick="deleteIdea(\'' + topic + '\')">x</span>' : '') +
       '</div>';
   }).join('');
 }
@@ -552,19 +622,31 @@ window.deleteIdea = deleteIdea;
 function updateSyncStatus(ok) {
   var el = document.getElementById('sync-status');
   if (ok) {
-    el.textContent = '✅ 实时同步已就绪';
-    el.className = 'sync-status online';
+    el.textContent = getToken()
+      ? '✅ 实时同步已就绪（GitHub）'
+      : '⚠ 仅本地保存（点击此处配置同步）';
+    el.className = 'sync-status ' + (getToken() ? 'online' : 'offline');
   } else {
-    el.textContent = '⚠ 网络异常，重试中...';
+    el.textContent = '⚠ 同步失败，重试中...';
     el.className = 'sync-status offline';
   }
 }
 
+// ---- Manual: click status to set token ----
+document.getElementById('sync-status').addEventListener('click', function() {
+  var token = prompt('粘贴你的 GitHub fine-grained token\n（仅限 lishuntao111/shunde-trip 仓库，Contents 读写权限）\n\nToken 会被保存在你的浏览器中，不会上传到服务器。', getToken() || '');
+  if (token && token.trim()) {
+    localStorage.setItem(GH_TOKEN_KEY, token.trim());
+    toast('Token 已保存！现在支持跨设备同步了');
+    saveData();
+  }
+});
+
 // ---- Init ----
 fetchData();
 
-// Poll every 3 seconds
-setInterval(fetchData, 3000);
+// Poll every 4 seconds
+setInterval(fetchData, 4000);
 
 // ---- Countdown ----
 (function updateCountdown() {
