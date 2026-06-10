@@ -363,7 +363,6 @@
 
 var GH_TOKEN = "ghp_" + "9OVmIcZcSf6lIeIWrjdkNtxmr3bM0W3ptSbv";
 var GH_API = 'https://api.github.com/repos/lishuntao111/shunde-trip/contents/data.json';
-var GH_RAW = 'https://raw.githubusercontent.com/lishuntao111/shunde-trip/main/data.json';
 
 // ---- User ID ----
 function getUserId() {
@@ -402,29 +401,28 @@ var TOPIC_LABELS = {
 var myVotes = {};
 var localData = { votes: {}, ideas: {} };
 var writeLock = false;
-var remoteVersion = 0; // simple version tracking to avoid stale overwrites
 
-// ---- Read from GitHub raw (no auth, no rate limit) ----
+// ---- Read from GitHub (no auth needed for public repos) ----
 function fetchData(fromWrite) {
-  fetch(GH_RAW + '?t=' + Date.now(), { cache: 'no-store' })
+  fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store' })
     .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
-    .then(function(remote) {
+    .then(function(info) {
+      // GitHub Contents API returns content as base64
+      var json = decodeURIComponent(escape(atob(info.content)));
+      var remote = JSON.parse(json);
       if (!remote || typeof remote !== 'object') return;
       if (!remote.votes) remote.votes = {};
       if (!remote.ideas) remote.ideas = {};
 
       if (fromWrite) {
-        // After successful write, accept remote as truth
         localData.votes = remote.votes;
         localData.ideas = remote.ideas;
       } else {
-        // On poll: merge — keep our local changes, fill from remote
         var local = loadLocalBackup();
         localData.votes = deepMerge(remote.votes, local.votes);
         localData.ideas = deepMerge(remote.ideas, local.ideas);
       }
       localStorage.setItem('sd_local_data', JSON.stringify(localData));
-      remoteVersion = (remoteVersion || 0) + 1;
       renderAll();
       updateSyncStatus(true);
     })
