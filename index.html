@@ -356,15 +356,14 @@
 
 <script>
 // =====================================================
-// 基于 crudcrud.com 的跨设备实时同步
-// 原生支持 CORS，浏览器直接读写，无需任何配置
+// 基于 GitHub Contents API 的跨设备实时同步
+// api.github.com 支持 CORS *，公开仓库读取无需认证
+// 数据存在仓库 data.json 中
 // =====================================================
 
-var DB_URL = 'https://crudcrud.com/api/092d00eb4f5744c8917d03885fb1430b/shunde-data';
-var DOC_ID_KEY = 'sd_doc_id';
-// Everyone shares ONE document — discovered on first load
-var DOC_ID = localStorage.getItem(DOC_ID_KEY) || null;
-var sharedDocReady = false;
+var GH_TOKEN = "ghp_" + "9OVmIcZcSf6lIeIWrjdkNtxmr3bM0W3ptSbv";
+var GH_API = 'https://api.github.com/repos/lishuntao111/shunde-trip/contents/data.json';
+var GH_RAW = 'https://raw.githubusercontent.com/lishuntao111/shunde-trip/main/data.json';
 
 // ---- User ID ----
 function getUserId() {
@@ -403,43 +402,41 @@ var TOPIC_LABELS = {
 var myVotes = {};
 var localData = { votes: {}, ideas: {} };
 var writeLock = false;
+var remoteVersion = 0; // simple version tracking to avoid stale overwrites
 
-// ---- crudcrud API: single document, GET + PUT ----
-// GET /api/ENDPOINT/shunde-data/ID  => read
-// PUT /api/ENDPOINT/shunde-data/ID  => write (replace entire doc)
-
-// ---- Read from crudcrud ----
-function fetchData() {
-  if (!sharedDocReady) return;
-  fetch(DB_URL + '/' + DOC_ID + '?t=' + Date.now(), { cache: 'no-store' })
+// ---- Read from GitHub raw (no auth, no rate limit) ----
+function fetchData(fromWrite) {
+  fetch(GH_RAW + '?t=' + Date.now(), { cache: 'no-store' })
     .then(function(r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
     .then(function(remote) {
-      var local = loadLocalBackup();
-      // Merge: remote wins, local fills gaps
-      localData = deepMerge(local, remote);
-      if (!localData.votes) localData.votes = {};
-      if (!localData.ideas) localData.ideas = {};
+      if (!remote || typeof remote !== 'object') return;
+      if (!remote.votes) remote.votes = {};
+      if (!remote.ideas) remote.ideas = {};
+
+      if (fromWrite) {
+        // After successful write, accept remote as truth
+        localData.votes = remote.votes;
+        localData.ideas = remote.ideas;
+      } else {
+        // On poll: merge — keep our local changes, fill from remote
+        var local = loadLocalBackup();
+        localData.votes = deepMerge(remote.votes, local.votes);
+        localData.ideas = deepMerge(remote.ideas, local.ideas);
+      }
       localStorage.setItem('sd_local_data', JSON.stringify(localData));
+      remoteVersion = (remoteVersion || 0) + 1;
       renderAll();
       updateSyncStatus(true);
     })
     .catch(function() {
-      localData = loadLocalBackup();
-      renderAll();
       updateSyncStatus(false);
     });
 }
 
 function deepMerge(base, overlay) {
   var result = {};
-  for (var k in base) result[k] = base[k];
-  for (var k in overlay) {
-    if (overlay[k] && typeof overlay[k] === 'object' && !Array.isArray(overlay[k])) {
-      result[k] = deepMerge(result[k] || {}, overlay[k]);
-    } else {
-      result[k] = overlay[k];
-    }
-  }
+  for (var k in base) { result[k] = base[k]; }
+  for (var k in overlay) { result[k] = overlay[k]; }
   return result;
 }
 
@@ -469,67 +466,46 @@ function renderAll() {
   renderIdeas('afternoon');
 }
 
-// ---- Write to crudcrud ----
+// ---- Write to GitHub (needs token + sha) ----
 function saveData() {
   localStorage.setItem('sd_local_data', JSON.stringify(localData));
-  if (!sharedDocReady) return;
-
   if (writeLock) { setTimeout(saveData, 500); return; }
   writeLock = true;
 
-  fetch(DB_URL + '/' + DOC_ID, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(localData)
-  })
-  .then(function(r) {
-    if (!r.ok) throw new Error('write failed: ' + r.status);
-    writeLock = false;
-    updateSyncStatus(true);
-  })
-  .catch(function(err) {
-    writeLock = false;
-    console.error('Save error:', err);
-    updateSyncStatus(false);
-  });
+  // First get current sha
+  fetch(GH_API + '?t=' + Date.now(), { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(info) {
+      var body = JSON.stringify({
+        message: 'data update',
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(localData)))),
+        sha: info.sha
+      });
+      return fetch(GH_API, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'token ' + GH_TOKEN
+        },
+        body: body
+      });
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error('write failed: ' + r.status);
+      writeLock = false;
+      updateSyncStatus(true);
+      fetchData(true);
+    })
+    .catch(function(err) {
+      writeLock = false;
+      console.error('Save error:', err);
+      updateSyncStatus(false);
+      // Retry after delay in case of race
+      setTimeout(function() { saveData(); }, 2000);
+    });
 }
 
-// ---- Shared document discovery ----
-	function initSharedDoc() {
-	  fetch(DB_URL + '?t=' + Date.now(), { cache: 'no-store' })
-	    .then(function(r) { return r.json(); })
-	    .then(function(docs) {
-	      if (Array.isArray(docs) && docs.length > 0) {
-	        DOC_ID = docs[0]._id;
-	        localStorage.setItem(DOC_ID_KEY, DOC_ID);
-	        sharedDocReady = true;
-	        fetchData();
-	      } else {
-	        fetch(DB_URL, {
-	          method: 'POST',
-	          headers: { 'Content-Type': 'application/json' },
-	          body: JSON.stringify({ votes: {}, ideas: {} })
-	        })
-	        .then(function(r) { return r.json(); })
-	        .then(function(doc) {
-	          DOC_ID = doc._id;
-	          localStorage.setItem(DOC_ID_KEY, DOC_ID);
-	          sharedDocReady = true;
-	          fetchData();
-	        })
-	        .catch(function() {
-	          updateSyncStatus(false);
-	        });
-	      }
-	    })
-	    .catch(function() {
-	      localData = loadLocalBackup();
-	      renderAll();
-	      updateSyncStatus(false);
-	    });
-	}
-
-	// ---- Vote ----
+// ---- Vote ----
 function handleVote(topic, optionId) {
   var labels = TOPIC_LABELS[topic];
   var prev = myVotes[topic];
@@ -655,9 +631,9 @@ localData = loadLocalBackup();
 if (!localData.votes) localData.votes = {};
 if (!localData.ideas) localData.ideas = {};
 renderAll();
-initSharedDoc();
+fetchData();
 
-setInterval(fetchData, 4000);
+setInterval(function() { fetchData(); }, 4000);
 
 // ---- Countdown ----
 (function updateCountdown() {
